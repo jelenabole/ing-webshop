@@ -1,13 +1,9 @@
 package com.ingemark.webshop.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.io.Serializable;
 
 @Entity
@@ -15,14 +11,16 @@ import java.io.Serializable;
 public class Product extends BaseEntity implements Serializable {
 
     @NotNull
-    @Column(length=10, unique=true)
-    @Size(min=10, max=10)
+    @Column(length=10, unique=true, updatable=false)
+    @Size(min=10, max=10, message="code must have exactly 10 characters")
+    @Setter(AccessLevel.NONE)
     private String code;
 
-    @NotNull
+    @NotBlank
     private String name;
 
     @NotNull
+    @PositiveOrZero
     private Float priceHrk;
 
     private String description;

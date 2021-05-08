@@ -1,4 +1,4 @@
-package com.ingemark.webshop.helper;
+package com.ingemark.webshop.enums;
 
 public enum OrderStatus {
     DRAFT, SUBMITTED

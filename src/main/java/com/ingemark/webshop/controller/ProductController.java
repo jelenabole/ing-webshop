@@ -1,80 +1,60 @@
 package com.ingemark.webshop.controller;
 
 import com.ingemark.webshop.model.Product;
-import com.ingemark.webshop.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ingemark.webshop.service.ProductService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import javax.validation.Valid;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
-    ProductRepository productRepository;
+    private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        try {
-            List<Product> products = new ArrayList<>(productRepository.findAll());
-
-            if (products.isEmpty()) return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            return new ResponseEntity<>(products, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public Iterable<Product> getAllProducts() {
+        return productService.getAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable("id") long id) {
-        Optional<Product> productData = productRepository.findById(id);
-
-        return productData.map(product -> new ResponseEntity<>(product, HttpStatus.OK))
+    public ResponseEntity<Product> getProduct(@PathVariable long id) {
+        return productService.getOne(id).map(product -> new ResponseEntity<>(product, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        try {
-            // TODO - map product
-            Product _product = productRepository
-                    .save(new Product(product.getCode(), product.getName(), product.getPriceHrk(),
-                            product.getDescription(), product.getIsAvailable()));
-            return new ResponseEntity<>(_product, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
+        Product saved = productService.save(product);
+
+        // if unique DB error occures, throw error
+        if (saved == null) {
+            return new ResponseEntity(
+                    Map.of("code", "Code must be unique"),
+                    HttpStatus.BAD_REQUEST);
         }
+
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable("id") long id, @RequestBody Product product) {
-        Optional<Product> productData = productRepository.findById(id);
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product product) {
+        Product prod = productService.update(id, product);
+        if (prod == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
-        if (productData.isPresent()) {
-            // TODO - fix populating data
-            Product _product = productData.get();
-            _product.setCode(product.getCode());
-            _product.setName(product.getName());
-            _product.setDescription(product.getDescription());
-            return new ResponseEntity<>(productRepository.save(product), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        return new ResponseEntity<>(prod, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<HttpStatus> deleteProduct(@PathVariable("id") long id) {
-        try {
-            productRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<?> deleteProduct(@PathVariable long id) {
+        if (productService.delete(id)) {
+            return ResponseEntity.noContent().build();
+        } else return ResponseEntity.notFound().build();
     }
 
 }
