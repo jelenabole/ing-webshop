@@ -1,31 +1,34 @@
 package com.ingemark.webshop.model;
 
-import com.ingemark.webshop.helper.OrderStatus;
-import lombok.AllArgsConstructor;
+import com.ingemark.webshop.enums.OrderStatus;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @Table(name="webshop_order")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class Order implements Serializable {
+@Getter @Setter
+public class Order extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
 
-    @NotNull
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    @NotNull
-    private Long totalPriceHrk;
+    @Column(nullable = false)
+    private float totalPriceHrk;
 
-    @NotNull
-    private String totalPriceEur;
+    @Column(nullable = false)
+    private float totalPriceEur;
+
+    @OneToMany(cascade = {CascadeType.ALL}) // (mappedBy = "webshop_order")
+    @JoinColumn(name = "order_id")
+    private Set<OrderItem> orderItems;
+
+    public Order() {
+        status = OrderStatus.DRAFT;
+    }
 
 }

@@ -1,4 +1,4 @@
-package com.ingemark.webshop.helper;
+package com.ingemark.webshop.handler;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

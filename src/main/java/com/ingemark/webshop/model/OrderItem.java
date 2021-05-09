@@ -1,27 +1,29 @@
 package com.ingemark.webshop.model;
 
-import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class OrderItem extends BaseEntity implements Serializable {
+@Getter @Setter @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
+public class OrderItem extends BaseEntity {
 
-    @ManyToOne
-    @JoinColumn(name="order_id")
-    private Order order;
 
     @OneToOne
     @JoinColumn(name="product_id")
+    @NotNull
+    @EqualsAndHashCode.Include
     private Product product;
 
+    @Min(0)
     @NotNull
-    private int quantity;
+    @EqualsAndHashCode.Include
+    private Integer quantity;
 
 }

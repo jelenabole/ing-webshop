@@ -1,25 +1,25 @@
 package com.ingemark.webshop.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.io.Serializable;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class Customer extends BaseEntity implements Serializable {
+@Getter @Setter @NoArgsConstructor
+public class Customer extends BaseEntity {
 
-    @NotNull
+    @NotBlank
     private String firstName;
 
-    @NotNull
+    @NotBlank
     private String lastName;
 
-    @NotNull
+    @NotBlank
+    @Email(regexp=".*@.*\\..*", message = "Email should be valid")
     private String email;
 
 }

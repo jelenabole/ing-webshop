@@ -20,7 +20,7 @@ public class ProductService {
         return productRepository.findAll();
     }
 
-    public Optional<Product> getOne(long id) {
+    public Optional<Product> getOne(Long id) {
         return productRepository.findById(id);
     }
 
@@ -49,7 +49,7 @@ public class ProductService {
         }
     }
 
-    public boolean delete(long id) {
+    public boolean delete(Long id) {
         try {
             productRepository.deleteById(id);
             return true;
