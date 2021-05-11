@@ -1,8 +1,6 @@
 package com.ingemark.webshop.service;
 
 import com.ingemark.webshop.model.Order;
-import com.ingemark.webshop.model.OrderItem;
-import com.ingemark.webshop.repository.OrderItemRepository;
 import com.ingemark.webshop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -16,7 +14,6 @@ import java.util.*;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
 
     public Iterable<Order> getAll() {
         return orderRepository.findAll();

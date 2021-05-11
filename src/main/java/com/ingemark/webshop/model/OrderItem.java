@@ -9,15 +9,14 @@ import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-@Entity
+@Embeddable
 @Getter @Setter @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
-public class OrderItem extends BaseEntity {
+public class OrderItem {
 
-
+    @NotNull
     @OneToOne
     @JoinColumn(name="product_id")
-    @NotNull
     @EqualsAndHashCode.Include
     private Product product;
 

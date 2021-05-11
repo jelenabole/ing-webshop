@@ -34,10 +34,11 @@ public class OrderController {
     }
 
     @PutMapping({ "/update-order", "/update-order/{id}" })
-    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @Valid @RequestBody Order order) {
+    public ResponseEntity<Order> updateOrder(@PathVariable(required = false) Long id, @Valid @RequestBody Order order) {
         if (order.getId() == null) return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 
         Order saved = orderService.update(order);
+        if (saved == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
         return new ResponseEntity<>(saved, HttpStatus.OK);
     }

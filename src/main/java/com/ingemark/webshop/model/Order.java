@@ -5,7 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name="webshop_order")
@@ -23,9 +24,12 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private float totalPriceEur;
 
-    @OneToMany(cascade = {CascadeType.ALL}) // (mappedBy = "webshop_order")
-    @JoinColumn(name = "order_id")
-    private Set<OrderItem> orderItems;
+    @ElementCollection
+    @CollectionTable(
+            name = "order_item",
+            joinColumns = @JoinColumn(name = "order_id"))
+    @OrderColumn(name = "index_id")
+    private List<OrderItem> orderItems = new ArrayList<>(0);
 
     public Order() {
         status = OrderStatus.DRAFT;
