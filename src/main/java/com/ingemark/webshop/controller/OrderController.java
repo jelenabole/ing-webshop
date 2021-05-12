@@ -50,12 +50,14 @@ public class OrderController {
         } else return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/finalize-order")
-    public ResponseEntity<Order> finalizeOrder() {
-        if (orderService.finalizeOrder()) {
-            return new ResponseEntity<>(null, HttpStatus.OK);
+    @GetMapping("/finalize-order/{id}")
+    public ResponseEntity<Order> finalizeOrder(@PathVariable Long id) {
+        try {
+            Order order = orderService.finalizeOrder(id);
+            return new ResponseEntity<>(order, HttpStatus.OK);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
     }
 
 }

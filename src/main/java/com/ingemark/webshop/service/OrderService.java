@@ -1,12 +1,20 @@
 package com.ingemark.webshop.service;
 
+import com.ingemark.webshop.enums.HNBCurrency;
+import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.model.ExchangeRateData;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.transaction.Transactional;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.time.Duration;
 import java.util.*;
 
 @Service
@@ -49,26 +57,36 @@ public class OrderService {
         }
     }
 
-    @Transactional
-    public boolean finalizeOrder() {
-        ExchangeRateData currentRate = getEuroValue();
+    public Order finalizeOrder(Long orderId) {
+        ExchangeRateData euroRate = getExchangeRate(HNBCurrency.EUR);
 
-        return false;
+        // do check out in DB transaction
+        return checkOut(orderId, euroRate);
     }
 
-    private ExchangeRateData getEuroValue() {
-        ExchangeRateData[] exchangeRateData = HNBApiClient
-                .get()
-                .uri("?valuta=EUR")
-                .retrieve()
-                .bodyToMono(ExchangeRateData[].class)
-                .block(REQUEST_TIMEOUT);
+    @Transactional
+    public Order checkOut(Long orderId, ExchangeRateData euroRate) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) return null;
+        if (order.getOrderItems().isEmpty()) return null;
+        BigDecimal totalPrice = new BigDecimal(0);
+        order.getOrderItems().forEach(
+                el -> totalPrice.add(BigDecimal.valueOf(el.getQuantity() * el.getProduct().getPriceHrk())));
+        BigDecimal totalPriceInEur = euroRate.getMiddleRate().multiply(totalPrice);
+        order.setTotalPriceEur(totalPriceInEur.round(new MathContext(2, RoundingMode.CEILING)).floatValue());
+        order.setStatus(OrderStatus.SUBMITTED);
+        return orderRepository.save(order);
+    }
 
-        if (exchangeRateData != null && exchangeRateData.length == 1) {
-            return exchangeRateData[0];
-        } else {
-            // error
-            return null;
-        }
+    private ExchangeRateData getExchangeRate(HNBCurrency currency) {
+        List<ExchangeRateData> exchangeRates = HNBApiClient.get()
+                .uri(currency.getUrl())
+                .retrieve()
+                .bodyToFlux(ExchangeRateData.class)
+                .collectList().block(REQUEST_TIMEOUT);
+
+        if (exchangeRates.isEmpty()) return null;
+
+        return exchangeRates.get(0);
     }
 }

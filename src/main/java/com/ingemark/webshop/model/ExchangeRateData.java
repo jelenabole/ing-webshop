@@ -2,9 +2,13 @@ package com.ingemark.webshop.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.ingemark.webshop.helper.HNBDecimalDeserializer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Getter @Setter @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -25,12 +29,15 @@ public class ExchangeRateData {
     private Integer unit;
 
     @JsonProperty("kupovni_tecaj")
-    private String buyingRate;
+    @JsonDeserialize(using = HNBDecimalDeserializer.class)
+    private BigDecimal buyingRate;
 
     @JsonProperty("srednji_tecaj")
-    private String middleRate;
+    @JsonDeserialize(using = HNBDecimalDeserializer.class)
+    private BigDecimal middleRate;
 
     @JsonProperty("prodajni_tecaj")
-    private String sellingRate;
+    @JsonDeserialize(using = HNBDecimalDeserializer.class)
+    private BigDecimal sellingRate;
 
 }
