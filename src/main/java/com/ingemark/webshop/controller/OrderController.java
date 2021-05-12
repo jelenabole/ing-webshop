@@ -46,12 +46,6 @@ public class OrderController {
 
     @GetMapping("/finalize-order/{id}")
     public ResponseEntity<Order> finalizeOrder(@PathVariable Long id) {
-        try {
-            Order order = orderService.finalizeOrder(id);
-            return new ResponseEntity<>(order, HttpStatus.OK);
-        } catch (Exception ex) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
+        return ResponseEntity.ok(orderService.finalizeOrder(id));
     }
-
 }

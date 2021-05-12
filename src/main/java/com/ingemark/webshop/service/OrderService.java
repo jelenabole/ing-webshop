@@ -5,12 +5,13 @@ import com.ingemark.webshop.enums.OrderStatus;
 import com.ingemark.webshop.handler.ObjectNotFoundException;
 import com.ingemark.webshop.model.ExchangeRateData;
 import com.ingemark.webshop.model.Order;
+import com.ingemark.webshop.model.OrderItem;
 import com.ingemark.webshop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -59,15 +60,23 @@ public class OrderService {
 
     @Transactional
     public Order checkOut(Long orderId, ExchangeRateData euroRate) {
-        Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null) return null;
-        if (order.getOrderItems().isEmpty()) return null;
-        BigDecimal totalPrice = new BigDecimal(0);
-        order.getOrderItems().forEach(
-                el -> totalPrice.add(BigDecimal.valueOf(el.getQuantity() * el.getProduct().getPriceHrk())));
-        BigDecimal totalPriceInEur = euroRate.getMiddleRate().multiply(totalPrice);
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), orderId));
+        if (order.getOrderItems().isEmpty())
+            throw new ObjectNotFoundException(OrderItem.class.getSimpleName(), orderId);
+
+        BigDecimal totalPriceInHrk = new BigDecimal(0);
+        for (OrderItem orderItem : order.getOrderItems()) {
+            totalPriceInHrk = totalPriceInHrk.add(
+                    BigDecimal.valueOf(orderItem.getQuantity() * orderItem.getProduct().getPriceHrk()));
+        }
+        BigDecimal totalPriceInEur = euroRate.getMiddleRate().multiply(totalPriceInHrk);
+
+
+        order.setTotalPriceHrk(totalPriceInHrk.round(new MathContext(2, RoundingMode.CEILING)).floatValue());
         order.setTotalPriceEur(totalPriceInEur.round(new MathContext(2, RoundingMode.CEILING)).floatValue());
         order.setStatus(OrderStatus.SUBMITTED);
+
         return orderRepository.save(order);
     }
 
