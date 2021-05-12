@@ -34,5 +34,4 @@ public class SpringFoxConfig {
                 Collections.emptyList()
         );
     }
-
 }

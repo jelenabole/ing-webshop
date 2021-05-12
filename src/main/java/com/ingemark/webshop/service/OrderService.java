@@ -13,7 +13,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class OrderService {
 
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(3);
+
     private final OrderRepository orderRepository;
+    private final WebClient HNBApiClient;
 
     public Iterable<Order> getAll() {
         return orderRepository.findAll();
@@ -33,11 +36,8 @@ public class OrderService {
         if (currentState == null) {
             return null;
         }
-
-
-
-
-        return orderRepository.save(currentState);
+        
+        return orderRepository.save(order);
     }
 
     public boolean delete(Long id) {
@@ -51,8 +51,24 @@ public class OrderService {
 
     @Transactional
     public boolean finalizeOrder() {
+        ExchangeRateData currentRate = getEuroValue();
 
         return false;
     }
 
+    private ExchangeRateData getEuroValue() {
+        ExchangeRateData[] exchangeRateData = HNBApiClient
+                .get()
+                .uri("?valuta=EUR")
+                .retrieve()
+                .bodyToMono(ExchangeRateData[].class)
+                .block(REQUEST_TIMEOUT);
+
+        if (exchangeRateData != null && exchangeRateData.length == 1) {
+            return exchangeRateData[0];
+        } else {
+            // error
+            return null;
+        }
+    }
 }
