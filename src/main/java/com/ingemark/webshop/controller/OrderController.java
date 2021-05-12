@@ -22,10 +22,8 @@ public class OrderController {
     }
 
     @GetMapping("/read-orders/{id}")
-    public ResponseEntity<Order> readOrder(@PathVariable Long id) {
-        return orderService.getOne(id)
-                .map(product -> new ResponseEntity<>(product, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOne(id));
     }
 
     @PostMapping("/create-order")
@@ -37,17 +35,13 @@ public class OrderController {
     public ResponseEntity<Order> updateOrder(@PathVariable(required = false) Long id, @Valid @RequestBody Order order) {
         if (order.getId() == null) return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
 
-        Order saved = orderService.update(order);
-        if (saved == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-
-        return new ResponseEntity<>(saved, HttpStatus.OK);
+        return ResponseEntity.ok(orderService.update(order.getId(), order));
     }
 
     @DeleteMapping("/delete-order/{id}")
     public ResponseEntity<Order> deleteOrder(@PathVariable Long id) {
-        if (orderService.delete(id)) {
-            return ResponseEntity.noContent().build();
-        } else return ResponseEntity.notFound().build();
+        orderService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/finalize-order/{id}")

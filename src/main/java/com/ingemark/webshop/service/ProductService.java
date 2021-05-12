@@ -1,14 +1,13 @@
 package com.ingemark.webshop.service;
 
+import com.ingemark.webshop.handler.ObjectNotFoundException;
+import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.Product;
 import com.ingemark.webshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,42 +19,31 @@ public class ProductService {
         return productRepository.findAll();
     }
 
-    public Optional<Product> getOne(Long id) {
-        return productRepository.findById(id);
+    public Product getOne(Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), id));
     }
 
     public Product save(Product product) {
-        try {
-            return productRepository.save(product);
-        } catch (DataIntegrityViolationException ex) {
-            return null;
-        }
+        return productRepository.save(product);
     }
 
     @Transactional
     public Product update(Long id, Product product) {
-        Optional<Product> prodInfo = productRepository.findById(id);
-        if (prodInfo.isPresent()) {
-            Product prodData = prodInfo.orElse(null);
+        Product newInfo = productRepository.findById(id)
+                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), id));
 
-            prodData.setName(product.getName());
-            prodData.setDescription(product.getDescription());
-            prodData.setIsAvailable(product.getIsAvailable());
-            prodData.setPriceHrk(product.getPriceHrk());
+        // code change ignored
+        newInfo.setName(product.getName());
+        newInfo.setDescription(product.getDescription());
+        newInfo.setIsAvailable(product.getIsAvailable());
+        newInfo.setPriceHrk(product.getPriceHrk());
 
-            return productRepository.save(prodData);
-        } else {
-            return null;
-        }
+        return productRepository.save(newInfo);
     }
 
-    public boolean delete(Long id) {
-        try {
-            productRepository.deleteById(id);
-            return true;
-        } catch (EmptyResultDataAccessException ex) {
-            return false;
-        }
+    public void delete(Long id) {
+        productRepository.deleteById(id);
     }
 
 }

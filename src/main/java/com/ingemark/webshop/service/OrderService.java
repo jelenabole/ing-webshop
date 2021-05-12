@@ -2,11 +2,11 @@ package com.ingemark.webshop.service;
 
 import com.ingemark.webshop.enums.HNBCurrency;
 import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.handler.ObjectNotFoundException;
 import com.ingemark.webshop.model.ExchangeRateData;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -30,8 +30,9 @@ public class OrderService {
         return orderRepository.findAll();
     }
 
-    public Optional<Order> getOne(Long id) {
-        return orderRepository.findById(id);
+    public Order getOne(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), id));
     }
 
     public Order save(Order order) {
@@ -39,22 +40,14 @@ public class OrderService {
     }
 
     @Transactional
-    public Order update(Order order) {
-        Order currentState = orderRepository.findById(order.getId()).orElse(null);
-        if (currentState == null) {
-            return null;
-        }
-        
+    public Order update(Long id, Order order) {
+        Order currentState = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), id));
         return orderRepository.save(order);
     }
 
-    public boolean delete(Long id) {
-        try {
-            orderRepository.deleteById(id);
-            return true;
-        } catch (EmptyResultDataAccessException ex) {
-            return false;
-        }
+    public void delete(Long id) {
+        orderRepository.deleteById(id);
     }
 
     public Order finalizeOrder(Long orderId) {
