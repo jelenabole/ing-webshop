@@ -1,4 +1,4 @@
-package com.ingemark.webshop.handler;
+package com.ingemark.webshop.exception;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -39,11 +39,11 @@ public class ValidationExceptionHandler {
     }
 
     @ResponseBody
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Map<String, Object> handleDataIntegrityError(DataIntegrityViolationException ex) {
         Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("status", HttpStatus.CONFLICT.value());
         return body;
     }
 

@@ -2,8 +2,8 @@ package com.ingemark.webshop.service;
 
 import com.ingemark.webshop.enums.HNBCurrency;
 import com.ingemark.webshop.enums.OrderStatus;
-import com.ingemark.webshop.handler.ObjectNotFoundException;
-import com.ingemark.webshop.model.ExchangeRateData;
+import com.ingemark.webshop.exception.ObjectNotFoundException;
+import com.ingemark.webshop.domain.ExchangeRateData;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
 import com.ingemark.webshop.repository.OrderRepository;
@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.*;

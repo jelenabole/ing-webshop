@@ -1,6 +1,6 @@
 package com.ingemark.webshop.service;
 
-import com.ingemark.webshop.handler.ObjectNotFoundException;
+import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.Product;
 import com.ingemark.webshop.repository.ProductRepository;

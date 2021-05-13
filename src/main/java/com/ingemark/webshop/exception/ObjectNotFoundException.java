@@ -1,4 +1,4 @@
-package com.ingemark.webshop.handler;
+package com.ingemark.webshop.exception;
 
 import lombok.Getter;
 

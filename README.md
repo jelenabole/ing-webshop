@@ -13,25 +13,19 @@ Needed for building and running the application:
 Below are instructions for downloading this app and running it locally.
 
 ### Setting up the environment / Starting the app
-* Create a postgres image from the Dockerfile and run PostgreSQL server container:
-* Go into the /docker folder, and run these commands:
-    ``` 
-    $ docker build -t webshop-image .
-    $ docker images  // see all images
-    $ docker run -d --name <webshop-container> -p 5432:5432 webshop-image
-    $ docker ps -a // check id of the container
-    $ docker start <first-3-chars-of-id>
-  ```
-* Check if the container is running:
-    ``` 
-    $ docker ps
-  ```
-  
 * Clone repository to your pc
     ```
     git clone
     ```
-* Create database container from image, and run it
+* Create a postgres image from the Dockerfile and run PostgreSQL server container:
+* Open terminal in the /docker folder, and run these commands:
+    ``` 
+    $ docker build -t webshop-image .
+    $ docker images     // check if image is created
+    $ docker run -d --name <webshop-container> -p 5432:5432 webshop-image
+    $ docker ps         // check if container is running container
+  ```
+ * Create database container from image, and run it
     ``` 
     Docker compose - create container from image, start container
     docker-compose run <image>
