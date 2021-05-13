@@ -65,16 +65,15 @@ public class OrderService {
         if (order.getOrderItems().isEmpty())
             throw new ObjectNotFoundException(OrderItem.class.getSimpleName(), orderId);
 
-        BigDecimal totalPriceInHrk = new BigDecimal(0);
+        BigDecimal totalPriceInHrk = BigDecimal.ZERO;
         for (OrderItem orderItem : order.getOrderItems()) {
             totalPriceInHrk = totalPriceInHrk.add(
-                    BigDecimal.valueOf(orderItem.getQuantity() * orderItem.getProduct().getPriceHrk()));
+                    orderItem.getProduct().getPriceHrk().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
         }
         BigDecimal totalPriceInEur = euroRate.getMiddleRate().multiply(totalPriceInHrk);
 
-
-        order.setTotalPriceHrk(totalPriceInHrk.round(new MathContext(2, RoundingMode.CEILING)).floatValue());
-        order.setTotalPriceEur(totalPriceInEur.round(new MathContext(2, RoundingMode.CEILING)).floatValue());
+        order.setTotalPriceHrk(totalPriceInHrk.setScale(2, RoundingMode.HALF_UP));
+        order.setTotalPriceEur(totalPriceInEur.setScale(2, RoundingMode.HALF_UP));
         order.setStatus(OrderStatus.SUBMITTED);
 
         return orderRepository.save(order);

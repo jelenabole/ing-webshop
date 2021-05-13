@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
+import java.math.BigDecimal;
 
 @Entity
 @Getter @Setter @NoArgsConstructor
@@ -22,7 +23,7 @@ public class Product extends BaseEntity {
 
     @NotNull
     @PositiveOrZero
-    private Float priceHrk;
+    private BigDecimal priceHrk;
 
     private String description;
 

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,10 +20,10 @@ public class Order extends BaseEntity {
     private OrderStatus status;
 
     @Column(nullable = false)
-    private float totalPriceHrk;
+    private BigDecimal totalPriceHrk;
 
     @Column(nullable = false)
-    private float totalPriceEur;
+    private BigDecimal totalPriceEur;
 
     @ElementCollection
     @CollectionTable(
