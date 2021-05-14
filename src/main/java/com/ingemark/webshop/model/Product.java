@@ -30,4 +30,15 @@ public class Product extends BaseEntity {
     @NotNull
     private Boolean isAvailable;
 
+    @Builder
+    public Product(Long id, String code, String name, BigDecimal priceHrk,
+                   String description, Boolean isAvailable) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.priceHrk = priceHrk;
+        this.description = description;
+        this.isAvailable = isAvailable;
+    }
+
 }
