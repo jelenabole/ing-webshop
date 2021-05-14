@@ -10,24 +10,23 @@ import com.ingemark.webshop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(3);
-
     private final OrderRepository orderRepository;
-    private final WebClient HNBApiClient;
+    private final HNBService hnbService;
 
-    public Iterable<Order> getAll() {
-        return orderRepository.findAll();
+    public List<Order> getAll() {
+        List<Order> list = new ArrayList<>();
+        orderRepository.findAll().iterator().forEachRemaining(list::add);
+        return list;
     }
 
     public Order getOne(Long id) {
@@ -40,9 +39,10 @@ public class OrderService {
     }
 
     @Transactional
-    public Order update(Long id, Order order) {
+    public Order update(Order order) {
+        if (order.getId() == null) throw new RuntimeException("Ids are not the same");
         Order currentState = orderRepository.findById(order.getId())
-                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), id));
+                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), order.getId()));
         return orderRepository.save(order);
     }
 
@@ -51,7 +51,7 @@ public class OrderService {
     }
 
     public Order finalizeOrder(Long orderId) {
-        ExchangeRateData euroRate = getExchangeRate(HNBCurrency.EUR);
+        ExchangeRateData euroRate = hnbService.getExchangeRate(HNBCurrency.EUR);
 
         // do check out in DB transaction
         return checkOut(orderId, euroRate);
@@ -76,17 +76,5 @@ public class OrderService {
         order.setStatus(OrderStatus.SUBMITTED);
 
         return orderRepository.save(order);
-    }
-
-    private ExchangeRateData getExchangeRate(HNBCurrency currency) {
-        List<ExchangeRateData> exchangeRates = HNBApiClient.get()
-                .uri(currency.getUrl())
-                .retrieve()
-                .bodyToFlux(ExchangeRateData.class)
-                .collectList().block(REQUEST_TIMEOUT);
-
-        if (exchangeRates.isEmpty()) return null;
-
-        return exchangeRates.get(0);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -62,6 +63,16 @@ public class ValidationExceptionHandler {
     public Object handleObjectNotFoundException(EmptyResultDataAccessException ex) {
         Map<String, Object> body = createExceptionBody(ex);
         body.put("status", HttpStatus.NOT_FOUND.value());
+        return body;
+    }
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.FAILED_DEPENDENCY)
+    @ExceptionHandler(WebClientResponseException.class)
+    public Object handleObjectNotFoundException(WebClientResponseException ex) {
+        Map<String, Object> body = createExceptionBody(ex);
+        body.put("status", HttpStatus.FAILED_DEPENDENCY.value());
+        body.put("additionalMessage", "HNB API error");
         return body;
     }
 

@@ -4,10 +4,10 @@ import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -17,35 +17,34 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping("/read-orders")
-    public Iterable<Order> getAllOrders() {
+    public List<Order> getAllOrders() {
         return orderService.getAll();
     }
 
     @GetMapping("/read-orders/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOne(id));
+    public Order getOrder(@PathVariable Long id) {
+        return orderService.getOne(id);
     }
 
     @PostMapping("/create-order")
-    public ResponseEntity<Order> createOrder(@Valid @RequestBody Order order) {
-        return new ResponseEntity<>(orderService.save(order), HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Order createOrder(@Valid @RequestBody Order order) {
+        return orderService.save(order);
     }
 
-    @PutMapping({ "/update-order", "/update-order/{id}" })
-    public ResponseEntity<Order> updateOrder(@PathVariable(required = false) Long id, @Valid @RequestBody Order order) {
-        if (order.getId() == null) return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-
-        return ResponseEntity.ok(orderService.update(order.getId(), order));
+    @PutMapping("/update-order")
+    public Order updateOrder(@Valid @RequestBody Order order) {
+        return orderService.update(order);
     }
 
     @DeleteMapping("/delete-order/{id}")
-    public ResponseEntity<Order> deleteOrder(@PathVariable Long id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOrder(@PathVariable Long id) {
         orderService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/finalize-order/{id}")
-    public ResponseEntity<Order> finalizeOrder(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.finalizeOrder(id));
+    public Order finalizeOrder(@PathVariable Long id) {
+        return orderService.finalizeOrder(id);
     }
 }
