@@ -32,12 +32,9 @@ public class Order extends BaseEntity {
     @ColumnDefault("0")
     private BigDecimal totalPriceEur;
 
-    @ElementCollection
-    @CollectionTable(
-            name = "order_item",
-            joinColumns = @JoinColumn(name = "order_id"))
-    @OrderColumn(name = "index_id")
-    private List<OrderItem> orderItems = new ArrayList<>(0);
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "order_id")
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

@@ -6,10 +6,9 @@ import javax.persistence.*;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-@Embeddable
+@Entity
 @Getter @Setter @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
-public class OrderItem {
+public class OrderItem extends BaseEntity {
 
     @NotNull
     @OneToOne
