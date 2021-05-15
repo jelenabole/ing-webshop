@@ -1,6 +1,8 @@
 package com.ingemark.webshop.controller;
 
+import com.ingemark.webshop.model.Customer;
 import com.ingemark.webshop.model.Order;
+import com.ingemark.webshop.service.CustomerService;
 import com.ingemark.webshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,7 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final CustomerService customerService;
 
     @GetMapping("/read-orders")
     public List<Order> getAllOrders() {
@@ -28,7 +31,12 @@ public class OrderController {
 
     @PostMapping("/create-order")
     @ResponseStatus(HttpStatus.CREATED)
-    public Order createOrder(@Valid @RequestBody Order order) {
+    public Order createOrder(@Valid @RequestBody(required = false) Order order) {
+        // omit getting user
+        Customer customer = customerService.getTestUser();
+        if (order == null) order = new Order();
+
+        order.setCustomer(customer);
         return orderService.save(order);
     }
 

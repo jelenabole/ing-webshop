@@ -3,7 +3,9 @@ package com.ingemark.webshop.model;
 import com.ingemark.webshop.enums.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -12,18 +14,22 @@ import java.util.List;
 
 @Entity
 @Table(name="webshop_order")
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor
 public class Order extends BaseEntity {
 
+    @ManyToOne(cascade = CascadeType.ALL)
+    private Customer customer;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     @Column(nullable = false)
+    @ColumnDefault("0")
     private BigDecimal totalPriceHrk;
 
     @Column(nullable = false)
+    @ColumnDefault("0")
     private BigDecimal totalPriceEur;
 
     @ElementCollection
@@ -33,8 +39,11 @@ public class Order extends BaseEntity {
     @OrderColumn(name = "index_id")
     private List<OrderItem> orderItems = new ArrayList<>(0);
 
-    public Order() {
-        status = OrderStatus.DRAFT;
+    @PrePersist
+    public void prePersist() {
+        if (status == null) status = OrderStatus.DRAFT;
+        if (totalPriceHrk == null) totalPriceHrk = BigDecimal.ZERO;
+        if (totalPriceEur == null) totalPriceEur = BigDecimal.ZERO;
     }
 
     @Builder
