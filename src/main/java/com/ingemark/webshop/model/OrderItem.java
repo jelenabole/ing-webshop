@@ -1,9 +1,6 @@
 package com.ingemark.webshop.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Min;
@@ -25,4 +22,9 @@ public class OrderItem {
     @EqualsAndHashCode.Include
     private Integer quantity;
 
+    @Builder
+    public OrderItem(Product product, Integer quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
 }

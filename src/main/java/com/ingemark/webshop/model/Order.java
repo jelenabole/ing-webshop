@@ -1,6 +1,7 @@
 package com.ingemark.webshop.model;
 
 import com.ingemark.webshop.enums.OrderStatus;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,4 +37,13 @@ public class Order extends BaseEntity {
         status = OrderStatus.DRAFT;
     }
 
+    @Builder
+    public Order(Long id, OrderStatus status, BigDecimal totalPriceHrk,
+                 BigDecimal totalPriceEur, List<OrderItem> orderItems) {
+        this.id = id;
+        this.status = status;
+        this.totalPriceHrk = totalPriceHrk;
+        this.totalPriceEur = totalPriceEur;
+        this.orderItems = orderItems;
+    }
 }

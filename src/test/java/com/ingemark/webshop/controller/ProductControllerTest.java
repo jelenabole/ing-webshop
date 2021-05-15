@@ -76,7 +76,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    @DisplayName("Should get empty list")
+    @DisplayName("Should get empty list even if products dont exist")
     public void shouldGetAllProducts_IfEmpty() throws Exception {
         when(productService.getAll()).thenReturn(Lists.newArrayList());
 
