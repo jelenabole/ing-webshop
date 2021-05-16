@@ -104,7 +104,7 @@ public class ProductControllerTest {
     @DisplayName("Should return NOT FOUND error on getting unknown id")
     public void shouldReturn404_OnGetOneProduct() throws Exception {
         when(productService.getOne(anyLong()))
-                .thenThrow(new EntityNotFoundException("Product with that id not found"));
+                .thenThrow(new EntityNotFoundException("Product with provided id not found"));
 
         this.mockMvc
                 .perform(get(productUrl + "/1"))
@@ -196,14 +196,14 @@ public class ProductControllerTest {
     @DisplayName("Should return NOT FOUND error on updating unknown id")
     public void shouldReturn404_OnUpdateProduct() throws Exception {
         when(productService.update(anyLong(), any()))
-                .thenThrow(new EntityNotFoundException("Product with that id not found"));
+                .thenThrow(new EntityNotFoundException("Product with provided id not found"));
 
         this.mockMvc
                 .perform(put(productUrl + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(test)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message", is("Product with that id not found")));
+                .andExpect(jsonPath("$.message", is("Product with provided id not found")));
     }
 
     @Test

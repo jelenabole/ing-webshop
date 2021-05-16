@@ -103,11 +103,11 @@ class OrderServiceTest {
     void testGetOne_ObjectNotFound() {
         Long objectID = 3L;
         when(orderRepository.findById(objectID))
-                .thenThrow(new EntityNotFoundException("Order with that id not found"));
+                .thenThrow(new EntityNotFoundException("Order with provided id not found"));
         Exception exception = assertThrows(EntityNotFoundException.class, () -> orderService.getOne(objectID));
 
         verify(orderRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Order with that id not found");
+        assertThat(exception.getMessage()).startsWith("Order with provided id not found");
     }
 
     @Test
@@ -143,11 +143,11 @@ class OrderServiceTest {
     void testUpdate_ObjectNotFound() {
         Long objectID = 3L;
         when(orderRepository.findById(anyLong()))
-                .thenThrow(new EntityNotFoundException("Order with that id not found"));
+                .thenThrow(new EntityNotFoundException("Order with provided id not found"));
         Exception exception = assertThrows(EntityNotFoundException.class, () -> orderService.update(testWithoutItems));
 
         verify(orderRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Order with that id not found");
+        assertThat(exception.getMessage()).startsWith("Order with provided id not found");
     }
 
     @Test

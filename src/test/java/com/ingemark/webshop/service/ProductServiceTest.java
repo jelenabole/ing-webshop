@@ -80,11 +80,11 @@ class ProductServiceTest {
     void testGetOne_ObjectNotFound() {
         Long objectID = 3L;
         when(productRepository.findById(objectID))
-                .thenThrow(new EntityNotFoundException("Product with that id not found"));
+                .thenThrow(new EntityNotFoundException("Product with provided id not found"));
         Exception exception = assertThrows(EntityNotFoundException.class, () -> productService.getOne(objectID));
 
         verify(productRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Product with that id not found");
+        assertThat(exception.getMessage()).startsWith("Product with provided id not found");
     }
 
     @Test
@@ -126,11 +126,11 @@ class ProductServiceTest {
     void testUpdate_ObjectNotFound() {
         Long objectID = 3L;
         when(productRepository.findById(objectID))
-                .thenThrow(new EntityNotFoundException("Product with that id not found"));
+                .thenThrow(new EntityNotFoundException("Product with provided id not found"));
         Exception exception = assertThrows(EntityNotFoundException.class, () -> productService.update(objectID, test));
 
         verify(productRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Product with that id not found");
+        assertThat(exception.getMessage()).startsWith("Product with provided id not found");
     }
 
     @Test

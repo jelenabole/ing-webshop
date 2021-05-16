@@ -126,7 +126,7 @@ public class OrderControllerTest {
     @DisplayName("Should return NOT FOUND error on getting unknown id")
     public void shouldReturn404_OnGetOneOrder() throws Exception {
         when(orderService.getOne(anyLong()))
-                .thenThrow(new EntityNotFoundException("Order with that id not found"));
+                .thenThrow(new EntityNotFoundException("Order with provided id not found"));
 
         this.mockMvc
                 .perform(get("/api/read-orders/1"))
@@ -229,14 +229,14 @@ public class OrderControllerTest {
     @DisplayName("Should return NOT FOUND error on updating unknown id")
     public void shouldReturn404_OnUpdateOrder() throws Exception {
         when(orderService.update(any()))
-                .thenThrow(new EntityNotFoundException("Order with that id not found"));
+                .thenThrow(new EntityNotFoundException("Order with provided id not found"));
 
         this.mockMvc
                 .perform(put("/api/update-order")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(testWithoutItems)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message", is("Order with that id not found")));
+                .andExpect(jsonPath("$.message", is("Order with provided id not found")));
     }
 
     @Test
@@ -267,12 +267,12 @@ public class OrderControllerTest {
     public void finalizeOrderFail_IfDoesntExist() throws Exception {
         Long orderID = 5L;
         when(orderService.finalizeOrder(any()))
-                .thenThrow(new EntityNotFoundException("Order with that id not found"));
+                .thenThrow(new EntityNotFoundException("Order with provided id not found"));
 
         this.mockMvc
                 .perform(post("/api/finalize-order/" + orderID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message", is("Order with that id not found")));
+                .andExpect(jsonPath("$.message", is("Order with provided id not found")));
 
         verify(orderService, times(1)).finalizeOrder(argumentCaptorID.capture());
         assertThat(argumentCaptorID.getValue()).isEqualTo(orderID);

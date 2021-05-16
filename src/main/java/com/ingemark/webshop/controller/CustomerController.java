@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Dummy controller for creating test user.
+ * Dummy controller for creating test-customer.
  */
 @RestController
 @RequestMapping("/api/customer")

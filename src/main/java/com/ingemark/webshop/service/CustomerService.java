@@ -15,16 +15,34 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
 
+    /**
+     * Returns all existing customer.
+     *
+     * @return fetched customer as a List
+     */
     public Iterable<Customer> getAll() {
         return customerRepository.findAll();
     }
 
+    /**
+     * Returns one customer with a given ID.
+     *
+     * @param id ID of the customer to fetch
+     * @return fetched customer
+     * @throws RuntimeException thrown if customer with provided ID does not exist
+     */
     public Customer getOne(Long id) {
         return customerRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Customer with that id not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Customer with provided id not found"));
     }
 
-    public Customer getTestUser() {
+    /**
+     * Returns an existing test customer. Gets first customer from the database, or, if the it's empty,
+     * creates a new customer to save and return.
+     * This function is for testing purposes, since customer operations are omitted.
+     * @return test customer
+     */
+    public Customer getTestCustomer() {
         List<Customer> list = new ArrayList<>();
         getAll().iterator().forEachRemaining(list::add);
 
@@ -35,6 +53,11 @@ public class CustomerService {
         return list.get(0);
     }
 
+
+    /**
+     * Creates new customer with predefined values.
+     * @return test customer
+     */
     public Customer create() {
         Customer customer = new Customer();
         customer.setEmail("email@email.com");

@@ -32,8 +32,8 @@ public class OrderController {
     @PostMapping("/create-order")
     @ResponseStatus(HttpStatus.CREATED)
     public Order createOrder(@Valid @RequestBody(required = false) Order order) {
-        // omit getting user
-        Customer customer = customerService.getTestUser();
+        // omit getting a customer
+        Customer customer = customerService.getTestCustomer();
         if (order == null) order = new Order();
 
         order.setCustomer(customer);
