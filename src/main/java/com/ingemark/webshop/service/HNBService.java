@@ -18,6 +18,12 @@ public class HNBService {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(3);
     private final WebClient HNBApiClient;
 
+    /**
+     * Fetches the exchange data for different currencies from HNB api.
+     *
+     * @param currency HNBCurrency enum value that represent the currency's url params
+     * @return Exchange Data object with the values for a given currency
+     */
     ExchangeRateData getExchangeRate(HNBCurrency currency) {
         List<ExchangeRateData> exchangeRates = HNBApiClient.get()
                 .uri(currency.getUrl())
