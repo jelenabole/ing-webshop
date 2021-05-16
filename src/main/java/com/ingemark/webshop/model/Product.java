@@ -8,6 +8,7 @@ import javax.validation.constraints.*;
 import java.math.BigDecimal;
 
 @Entity
+@ToString
 @Getter @Setter @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
 public class Product extends BaseEntity {

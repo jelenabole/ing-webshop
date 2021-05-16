@@ -1,10 +1,7 @@
 package com.ingemark.webshop.model;
 
 import com.ingemark.webshop.enums.OrderStatus;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
@@ -13,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.Set;
 
 @Entity
+@ToString
 @Table(name="webshop_order")
 @Getter @Setter @NoArgsConstructor
 public class Order extends BaseEntity {

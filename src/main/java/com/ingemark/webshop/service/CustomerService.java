@@ -3,6 +3,8 @@ package com.ingemark.webshop.service;
 import com.ingemark.webshop.model.Customer;
 import com.ingemark.webshop.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
@@ -13,6 +15,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomerService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CustomerService.class);
+
     private final CustomerRepository customerRepository;
 
     /**
@@ -21,6 +25,7 @@ public class CustomerService {
      * @return fetched customer as a List
      */
     public Iterable<Customer> getAll() {
+        logger.info("getAll is called");
         return customerRepository.findAll();
     }
 
@@ -32,6 +37,7 @@ public class CustomerService {
      * @throws RuntimeException thrown if customer with provided ID does not exist
      */
     public Customer getOne(Long id) {
+        logger.info("getOne is called - with id: {}", id);
         return customerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer with provided id not found"));
     }
@@ -43,6 +49,7 @@ public class CustomerService {
      * @return test customer
      */
     public Customer getTestCustomer() {
+        logger.info("getTestCustomer is called");
         List<Customer> list = new ArrayList<>();
         getAll().iterator().forEachRemaining(list::add);
 

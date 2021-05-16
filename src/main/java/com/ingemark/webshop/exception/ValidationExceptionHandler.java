@@ -1,5 +1,7 @@
 package com.ingemark.webshop.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,10 +25,13 @@ import java.util.Map;
 @ControllerAdvice
 public class ValidationExceptionHandler {
 
+    Logger logger = LoggerFactory.getLogger(ValidationExceptionHandler.class);
+
     @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleValidationError(MethodArgumentNotValidException ex) {
+        logger.warn("Controller method argument validation failed");
         Map<String, Object> body = createExceptionBody(ex, HttpStatus.BAD_REQUEST);
 
         Map<String, String> fieldErrors = new HashMap<>();
@@ -37,6 +42,7 @@ public class ValidationExceptionHandler {
         });
         body.put("field-errors", fieldErrors);
 
+        logger.warn("Field errors: {}", fieldErrors);
         return body;
     }
 
@@ -44,6 +50,7 @@ public class ValidationExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ HttpMessageNotReadableException.class, ArgumentNotValidException.class })
     public Map<String, Object> handleWrongArguments(RuntimeException ex) {
+        logger.warn("Bad Request - Controller Method Argument Validation Exception. Message: {}", ex.getMessage());
         return createExceptionBody(ex, HttpStatus.BAD_REQUEST);
     }
 
@@ -51,6 +58,7 @@ public class ValidationExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Map<String, Object> handleDataIntegrityError(DataIntegrityViolationException ex) {
+        logger.warn("Conflict - Data Integrity Violation Exception. Message: {}", ex.getMessage());
         return createExceptionBody(ex, HttpStatus.CONFLICT);
     }
 
@@ -58,6 +66,7 @@ public class ValidationExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler({ EntityNotFoundException.class, EmptyResultDataAccessException.class }) // get, delete
     public Object handleObjectNotFoundException(RuntimeException ex) {
+        logger.warn("Not Found - Entity Not Found. Message: {}", ex.getMessage());
         return createExceptionBody(ex, HttpStatus.NOT_FOUND);
     }
 
@@ -65,8 +74,9 @@ public class ValidationExceptionHandler {
     @ResponseStatus(HttpStatus.FAILED_DEPENDENCY)
     @ExceptionHandler(WebClientResponseException.class)
     public Object handleObjectNotFoundException(WebClientResponseException ex) {
+        logger.warn("Failed Dependency - HNB Client Exception. Message: {}", ex.getMessage());
         Map<String, Object> body = createExceptionBody(ex, HttpStatus.FAILED_DEPENDENCY);
-        body.put("additionalMessage", "HNB API error");
+        body.put("additionalMessage", "HNB Client Exception");
         return body;
     }
 
