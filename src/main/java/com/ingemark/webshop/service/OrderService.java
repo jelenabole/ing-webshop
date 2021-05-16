@@ -58,7 +58,7 @@ public class OrderService {
         if (newItems.size() != 0) {
             List<Long> ids = newItems.stream().map(item -> item.getProduct().getId()).collect(Collectors.toList());
             List<Product> notAvailable = productService.getAllByIds(ids);
-            notAvailable.removeIf(Product::getIsAvailable);
+            notAvailable.removeIf(Product::isAvailable);
 
             // 3 - remove items that are not available
             fromRequest.removeIf(item -> notAvailable.contains(item.getProduct()));

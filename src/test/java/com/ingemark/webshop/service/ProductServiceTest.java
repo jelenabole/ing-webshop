@@ -118,7 +118,7 @@ class ProductServiceTest {
         Assertions.assertThat(result.getCode()).isEqualTo("1234567890");
         Assertions.assertThat(result.getId()).isEqualTo(objectID);
         Assertions.assertThat(result.getName()).isEqualTo("new name");
-        Assertions.assertThat(result.getIsAvailable()).isEqualTo(false);
+        Assertions.assertThat(result.isAvailable()).isEqualTo(false);
         Assertions.assertThat(result.getPriceHrk()).isEqualTo(BigDecimal.ZERO);
     }
 

@@ -1,5 +1,6 @@
 package com.ingemark.webshop.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import javax.persistence.*;
@@ -27,12 +28,12 @@ public class Product extends BaseEntity {
 
     private String description;
 
-    @NotNull
-    private Boolean isAvailable;
+    @JsonProperty("isAvailable")
+    private boolean isAvailable;
 
     @Builder
     public Product(Long id, String code, String name, BigDecimal priceHrk,
-                   String description, Boolean isAvailable) {
+                   String description, boolean isAvailable) {
         this.id = id;
         this.code = code;
         this.name = name;

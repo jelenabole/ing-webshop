@@ -45,7 +45,7 @@ public class ProductService {
         // code change ignored
         newInfo.setName(product.getName());
         newInfo.setDescription(product.getDescription());
-        newInfo.setIsAvailable(product.getIsAvailable());
+        newInfo.setAvailable(product.isAvailable());
         newInfo.setPriceHrk(product.getPriceHrk());
 
         productRepository.save(newInfo);
