@@ -8,6 +8,7 @@ import com.ingemark.webshop.model.Product;
 import com.ingemark.webshop.repository.OrderRepository;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderServiceTest {
     private OrderService orderService;
+    private ProductService productService;
     private HNBService hnbService;
     private OrderRepository orderRepository;
 
@@ -39,7 +41,7 @@ class OrderServiceTest {
     @BeforeAll
     void prepare() {
         testWithoutItems = Order.builder().id(1L).status(OrderStatus.DRAFT).totalPriceHrk(BigDecimal.ZERO)
-                .totalPriceEur(BigDecimal.ZERO).orderItems(new ArrayList<>()).build();
+                .totalPriceEur(BigDecimal.ZERO).orderItems(Sets.newHashSet()).build();
 
         Product product1 = Product.builder().id(1L).code("1234567890").name("product").isAvailable(true)
                 .priceHrk(BigDecimal.TEN).description("description of product").build();
@@ -49,14 +51,16 @@ class OrderServiceTest {
         OrderItem orderItem2 = OrderItem.builder().product(product2).quantity(3).build();
 
         testWithItems = Order.builder().id(2L).status(OrderStatus.DRAFT).totalPriceHrk(BigDecimal.ZERO)
-                .totalPriceEur(BigDecimal.ZERO).orderItems(Lists.newArrayList(orderItem1, orderItem2)).build();
+                .totalPriceEur(BigDecimal.ZERO).orderItems(Sets.newHashSet(Arrays.asList(orderItem1, orderItem2)))
+                .build();
     }
 
     @BeforeEach
     void setupService() {
         orderRepository = mock(OrderRepository.class);
+        productService = mock(ProductService.class);
         hnbService = mock(HNBService.class);
-        orderService = new OrderService(orderRepository, hnbService);
+        orderService = new OrderService(orderRepository, productService, hnbService);
     }
 
     @Test
@@ -121,9 +125,8 @@ class OrderServiceTest {
     @Test
     void testUpdate() {
         Long objectID = 1L;
-        // TODO - add new item
         Order update = Order.builder().id(1L).status(OrderStatus.DRAFT).totalPriceHrk(BigDecimal.ZERO)
-                .totalPriceEur(BigDecimal.ZERO).orderItems(Lists.newArrayList(orderItem1)).build();
+                .totalPriceEur(BigDecimal.ZERO).orderItems(Sets.newHashSet(Arrays.asList(orderItem1))).build();
 
         when(orderRepository.findById(objectID)).thenReturn(Optional.of(testWithoutItems));
         when(orderRepository.save(any(Order.class))).thenReturn(update);

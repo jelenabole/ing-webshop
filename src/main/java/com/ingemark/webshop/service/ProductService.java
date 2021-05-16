@@ -22,6 +22,12 @@ public class ProductService {
         return list;
     }
 
+    public List<Product> getAllByIds(List<Long> ids) {
+        List<Product> list = new ArrayList<>();
+        productRepository.findAllById(ids).iterator().forEachRemaining(list::add);
+        return list;
+    }
+
     public Product getOne(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundException(Product.class.getSimpleName(), id));

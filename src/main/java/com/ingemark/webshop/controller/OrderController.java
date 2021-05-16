@@ -51,7 +51,7 @@ public class OrderController {
         orderService.delete(id);
     }
 
-    @GetMapping("/finalize-order/{id}")
+    @PostMapping("/finalize-order/{id}")
     public Order finalizeOrder(@PathVariable Long id) {
         return orderService.finalizeOrder(id);
     }

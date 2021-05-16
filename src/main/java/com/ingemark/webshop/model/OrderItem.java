@@ -8,6 +8,7 @@ import javax.validation.constraints.NotNull;
 
 @Entity
 @Getter @Setter @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
 public class OrderItem extends BaseEntity {
 
     @NotNull

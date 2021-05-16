@@ -2,12 +2,15 @@ package com.ingemark.webshop.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.exception.ArgumentNotValidException;
 import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
 import com.ingemark.webshop.model.Product;
+import com.ingemark.webshop.service.CustomerService;
 import com.ingemark.webshop.service.OrderService;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,13 +19,14 @@ import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -53,6 +57,8 @@ public class OrderControllerTest {
 
     @MockBean
     private OrderService orderService;
+    @MockBean
+    private CustomerService customerService;
 
     private static Order testWithoutItems;
     private static Order testWithItems;
@@ -60,7 +66,7 @@ public class OrderControllerTest {
     @BeforeAll
     void prepare() {
         testWithoutItems = Order.builder().id(1L).status(OrderStatus.DRAFT).totalPriceHrk(BigDecimal.ZERO)
-                .totalPriceEur(BigDecimal.ZERO).orderItems(new ArrayList<>()).build();
+                .totalPriceEur(BigDecimal.ZERO).orderItems(new HashSet<>()).build();
 
         Product product1 = Product.builder().id(1L).code("1234567890").name("product").isAvailable(true)
                 .priceHrk(BigDecimal.TEN).description("description of product").build();
@@ -70,7 +76,7 @@ public class OrderControllerTest {
         OrderItem item2 = OrderItem.builder().product(product2).quantity(3).build();
 
         testWithItems = Order.builder().id(2L).status(OrderStatus.DRAFT).totalPriceHrk(BigDecimal.ZERO)
-                .totalPriceEur(BigDecimal.ZERO).orderItems(Lists.newArrayList(item1, item2)).build();
+                .totalPriceEur(BigDecimal.ZERO).orderItems(Sets.newHashSet(Arrays.asList(item1, item2))).build();
     }
 
     @Test
@@ -129,6 +135,23 @@ public class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("Should create new order without body")
+    public void shouldCreateNewOrderFromNull() throws Exception {
+        Order created = Order.builder().id(3L).status(OrderStatus.DRAFT).build();
+        when(orderService.save(any(Order.class))).thenReturn(created);
+
+        this.mockMvc
+                .perform(post("/api/create-order"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(3)))
+                .andExpect(jsonPath("$.status", is("DRAFT")))
+                .andExpect(jsonPath("$.orderItems.[*]", hasSize(0)));
+
+        verify(orderService, times(1)).save(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue().getStatus()).isEqualTo(null);
+    }
+
+    @Test
     @DisplayName("Should create new order")
     public void shouldCreateNewOrder() throws Exception {
         Order request = Order.builder().build();
@@ -167,19 +190,33 @@ public class OrderControllerTest {
         assertThat(argumentCaptor.getValue().getTotalPriceHrk()).isEqualTo(BigDecimal.ZERO);
     }
 
-
     @Test
-    @DisplayName("Should fail on validation when trying to update order with invalid fields")
-    public void shouldFailOnValidation_OnUpdateOrder() throws Exception {
-        Product failProduct = Product.builder().id(2L).code("0000012345").name("product").isAvailable(true)
-                .priceHrk(BigDecimal.valueOf(-15.75)).build();
-        OrderItem failItem = OrderItem.builder().product(failProduct).quantity(2).build();
-        Order failTest = Order.builder().id(1L).orderItems(Lists.newArrayList(failItem)).build();
+    @DisplayName("Should return 400 if arguments are not valid")
+    public void shouldFailIfArgumentsInvalid_OnUpdateOrder() throws Exception {
+        when(orderService.update(any()))
+                .thenThrow(new ArgumentNotValidException("Object has no id"));
 
         this.mockMvc
                 .perform(put("/api/update-order")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(failTest)))
+                        .content(objectMapper.writeValueAsString(testWithoutItems)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Object has no id")));
+
+        verify(orderService, times(0)).save(forClass(Order.class).capture());
+    }
+
+
+    @Test
+    @DisplayName("Should fail on validation when trying to update order with negative quantity")
+    public void shouldFailOnValidation_OnUpdateOrder() throws Exception {
+        OrderItem failItem = OrderItem.builder().product(Product.builder().build()).quantity(-2).build();
+        testWithItems.getOrderItems().add(failItem);
+
+        this.mockMvc
+                .perform(put("/api/update-order")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(testWithItems)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", Matchers.startsWith("Validation failed")))
                 .andExpect(jsonPath("$.message",
@@ -216,8 +253,7 @@ public class OrderControllerTest {
 
     @Test
     public void deleteOrderFail_IfDoesntExist() throws Exception {
-        when(orderService.update(any()))
-                .thenThrow(new EmptyResultDataAccessException(0));
+        doThrow(new EntityNotFoundException()).when(orderService).delete(anyLong());
 
         Long orderID = 5L;
         this.mockMvc
@@ -225,6 +261,51 @@ public class OrderControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(orderService, times(1)).delete(argumentCaptorID.capture());
+        assertThat(argumentCaptorID.getValue()).isEqualTo(orderID);
+    }
+
+    @Test
+    public void finalizeOrderFail_IfDoesntExist() throws Exception {
+        Long orderID = 5L;
+        when(orderService.finalizeOrder(any()))
+                .thenThrow(new ObjectNotFoundException(Order.class.getSimpleName(), orderID));
+
+        this.mockMvc
+                .perform(post("/api/finalize-order/" + orderID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is("Order with id " + orderID + " not found")));
+
+        verify(orderService, times(1)).finalizeOrder(argumentCaptorID.capture());
+        assertThat(argumentCaptorID.getValue()).isEqualTo(orderID);
+    }
+
+    @Test
+    public void finalizeOrderFail_IfNoItems() throws Exception {
+        Long orderID = 5L;
+        when(orderService.finalizeOrder(any()))
+                .thenThrow(new ArgumentNotValidException("Order doesn't have any items"));
+
+        this.mockMvc
+                .perform(post("/api/finalize-order/" + orderID))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Order doesn't have any items")));
+
+        verify(orderService, times(1)).finalizeOrder(argumentCaptorID.capture());
+        assertThat(argumentCaptorID.getValue()).isEqualTo(orderID);
+    }
+
+    @Test
+    public void finalizeOrderFail_AlreadyFinalized() throws Exception {
+        when(orderService.finalizeOrder(any()))
+                .thenThrow(new ArgumentNotValidException("Order already finalized"));
+
+        Long orderID = 5L;
+        this.mockMvc
+                .perform(post("/api/finalize-order/" + orderID))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Order already finalized")));
+
+        verify(orderService, times(1)).finalizeOrder(argumentCaptorID.capture());
         assertThat(argumentCaptorID.getValue()).isEqualTo(orderID);
     }
 

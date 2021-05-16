@@ -8,9 +8,9 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import javax.persistence.*;
+import javax.validation.Valid;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name="webshop_order")
@@ -32,9 +32,10 @@ public class Order extends BaseEntity {
     @ColumnDefault("0")
     private BigDecimal totalPriceEur;
 
+    @Valid
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "order_id")
-    private List<OrderItem> orderItems = new ArrayList<>();
+    private Set<OrderItem> orderItems;
 
     @PrePersist
     public void prePersist() {
@@ -45,7 +46,7 @@ public class Order extends BaseEntity {
 
     @Builder
     public Order(Long id, OrderStatus status, BigDecimal totalPriceHrk,
-                 BigDecimal totalPriceEur, List<OrderItem> orderItems) {
+                 BigDecimal totalPriceEur, Set<OrderItem> orderItems) {
         this.id = id;
         this.status = status;
         this.totalPriceHrk = totalPriceHrk;

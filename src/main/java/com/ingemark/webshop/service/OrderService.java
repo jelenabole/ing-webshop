@@ -2,11 +2,12 @@ package com.ingemark.webshop.service;
 
 import com.ingemark.webshop.enums.HNBCurrency;
 import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.exception.ArgumentNotValidException;
 import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.domain.ExchangeRateData;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
-import com.ingemark.webshop.repository.OrderItemRepository;
+import com.ingemark.webshop.model.Product;
 import com.ingemark.webshop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,9 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
+    private final ProductService productService;
     private final HNBService hnbService;
 
     public List<Order> getAll() {
@@ -44,14 +43,33 @@ public class OrderService {
 
     @Transactional
     public Order update(Order order) {
-        if (order.getId() == null) throw new RuntimeException("Object has no id");
+        if (order.getId() == null) throw new ArgumentNotValidException("Object has no id");
 
         Order currentState = orderRepository.findById(order.getId())
                 .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), order.getId()));
-        List<Long> ids = currentState.getOrderItems().stream()
-                .map(OrderItem::getId).collect(Collectors.toList());
-        Iterable<OrderItem> checkItems = orderItemRepository.findAllById(ids);
-        return orderRepository.save(order);
+        if (order.getStatus() == OrderStatus.SUBMITTED) throw new ArgumentNotValidException("Object already finalized");
+        Set<OrderItem> fromRequest = order.getOrderItems();
+
+        // 1 - remove items that are 0
+        fromRequest.removeIf(item -> item.getQuantity() == 0);
+
+        // 2 - find items that are not available
+        Set<OrderItem> newItems = new HashSet<>(fromRequest) {{ removeAll(currentState.getOrderItems()); }};
+        if (newItems.size() != 0) {
+            List<Long> ids = newItems.stream().map(item -> item.getProduct().getId()).collect(Collectors.toList());
+            List<Product> notAvailable = productService.getAllByIds(ids);
+            notAvailable.removeIf(Product::getIsAvailable);
+
+            // 3 - remove items that are not available
+            fromRequest.removeIf(item -> notAvailable.contains(item.getProduct()));
+        }
+
+        // 4 - remove items that are not in filtered request, and add new ones / update quantites
+        currentState.getOrderItems().removeIf(item -> !fromRequest.contains(item));
+        currentState.getOrderItems().addAll(fromRequest);
+
+        // omitted calc for current price
+        return orderRepository.save(currentState);
     }
 
     public void delete(Long id) {
@@ -59,30 +77,31 @@ public class OrderService {
     }
 
     public Order finalizeOrder(Long orderId) {
+        // validate order
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), orderId));
+        if (order.getStatus().equals(OrderStatus.SUBMITTED))
+            throw new ArgumentNotValidException("Order already finalized");
+        if (order.getOrderItems().isEmpty())
+            throw new ArgumentNotValidException("Order doesn't have any items");
+
         ExchangeRateData euroRate = hnbService.getExchangeRate(HNBCurrency.EUR);
 
-        // do check out in DB transaction
-        return checkOut(orderId, euroRate);
-    }
-
-    @Transactional
-    public Order checkOut(Long orderId, ExchangeRateData euroRate) {
-        Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), orderId));
-        if (order.getOrderItems().isEmpty())
-            throw new ObjectNotFoundException(OrderItem.class.getSimpleName(), orderId);
-
-        BigDecimal totalPriceInHrk = BigDecimal.ZERO;
-        for (OrderItem orderItem : order.getOrderItems()) {
-            totalPriceInHrk = totalPriceInHrk.add(
-                    orderItem.getProduct().getPriceHrk().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
-        }
-        BigDecimal totalPriceInEur = euroRate.getMiddleRate().multiply(totalPriceInHrk);
-
-        order.setTotalPriceHrk(totalPriceInHrk.setScale(2, RoundingMode.HALF_UP));
+        // calculate prices
+        calculateTotalPrice(order);
+        BigDecimal totalPriceInEur = euroRate.getMiddleRate().multiply(order.getTotalPriceHrk());
         order.setTotalPriceEur(totalPriceInEur.setScale(2, RoundingMode.HALF_UP));
-        order.setStatus(OrderStatus.SUBMITTED);
 
+        order.setStatus(OrderStatus.SUBMITTED);
         return orderRepository.save(order);
     }
+
+    private void calculateTotalPrice(Order order) {
+        BigDecimal totalPrice = order.getOrderItems().stream()
+                .map(item -> item.getProduct().getPriceHrk().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        order.setTotalPriceHrk(totalPrice);
+        order.setTotalPriceHrk(totalPrice.setScale(2, RoundingMode.HALF_UP));
+    }
+
 }
