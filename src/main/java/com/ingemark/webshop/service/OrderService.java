@@ -3,7 +3,6 @@ package com.ingemark.webshop.service;
 import com.ingemark.webshop.enums.HNBCurrency;
 import com.ingemark.webshop.enums.OrderStatus;
 import com.ingemark.webshop.exception.ArgumentNotValidException;
-import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.domain.ExchangeRateData;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
@@ -13,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -34,7 +34,7 @@ public class OrderService {
 
     public Order getOne(Long id) {
         return orderRepository.findById(id)
-                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), id));
+                .orElseThrow(() -> new EntityNotFoundException("Order with that id not found"));
     }
 
     public Order save(Order order) {
@@ -46,7 +46,7 @@ public class OrderService {
         if (order.getId() == null) throw new ArgumentNotValidException("Object has no id");
 
         Order currentState = orderRepository.findById(order.getId())
-                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), order.getId()));
+                .orElseThrow(() -> new EntityNotFoundException("Order with that id not found"));
         if (order.getStatus() == OrderStatus.SUBMITTED) throw new ArgumentNotValidException("Object already finalized");
         Set<OrderItem> fromRequest = order.getOrderItems();
 
@@ -79,7 +79,7 @@ public class OrderService {
     public Order finalizeOrder(Long orderId) {
         // validate order
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ObjectNotFoundException(Order.class.getSimpleName(), orderId));
+                .orElseThrow(() -> new EntityNotFoundException("Order with that id not found"));
         if (order.getStatus().equals(OrderStatus.SUBMITTED))
             throw new ArgumentNotValidException("Order already finalized");
         if (order.getOrderItems().isEmpty())

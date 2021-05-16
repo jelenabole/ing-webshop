@@ -1,7 +1,6 @@
 package com.ingemark.webshop.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.model.Product;
 import com.ingemark.webshop.service.ProductService;
 import org.assertj.core.util.Lists;
@@ -17,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -104,7 +104,7 @@ public class ProductControllerTest {
     @DisplayName("Should return NOT FOUND error on getting unknown id")
     public void shouldReturn404_OnGetOneProduct() throws Exception {
         when(productService.getOne(anyLong()))
-                .thenThrow(new ObjectNotFoundException(Product.class.getSimpleName(), anyLong()));
+                .thenThrow(new EntityNotFoundException("Product with that id not found"));
 
         this.mockMvc
                 .perform(get(productUrl + "/1"))
@@ -196,14 +196,14 @@ public class ProductControllerTest {
     @DisplayName("Should return NOT FOUND error on updating unknown id")
     public void shouldReturn404_OnUpdateProduct() throws Exception {
         when(productService.update(anyLong(), any()))
-                .thenThrow(new ObjectNotFoundException(Product.class.getSimpleName(), 1L));
+                .thenThrow(new EntityNotFoundException("Product with that id not found"));
 
         this.mockMvc
                 .perform(put(productUrl + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(test)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message", is("Product with id 1 not found")));
+                .andExpect(jsonPath("$.message", is("Product with that id not found")));
     }
 
     @Test

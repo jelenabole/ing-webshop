@@ -1,6 +1,5 @@
 package com.ingemark.webshop.service;
 
-import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.model.Product;
 import com.ingemark.webshop.repository.ProductRepository;
 import org.assertj.core.api.Assertions;
@@ -9,6 +8,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -80,11 +80,11 @@ class ProductServiceTest {
     void testGetOne_ObjectNotFound() {
         Long objectID = 3L;
         when(productRepository.findById(objectID))
-                .thenThrow(new ObjectNotFoundException(Product.class.getSimpleName(), objectID));
-        Exception exception = assertThrows(ObjectNotFoundException.class, () -> productService.getOne(objectID));
+                .thenThrow(new EntityNotFoundException("Product with that id not found"));
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> productService.getOne(objectID));
 
         verify(productRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Product with id " + objectID).contains("not found");
+        assertThat(exception.getMessage()).startsWith("Product with that id not found");
     }
 
     @Test
@@ -126,11 +126,11 @@ class ProductServiceTest {
     void testUpdate_ObjectNotFound() {
         Long objectID = 3L;
         when(productRepository.findById(objectID))
-                .thenThrow(new ObjectNotFoundException(Product.class.getSimpleName(), objectID));
-        Exception exception = assertThrows(ObjectNotFoundException.class, () -> productService.update(objectID, test));
+                .thenThrow(new EntityNotFoundException("Product with that id not found"));
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> productService.update(objectID, test));
 
         verify(productRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Product with id " + objectID).contains("not found");
+        assertThat(exception.getMessage()).startsWith("Product with that id not found");
     }
 
     @Test

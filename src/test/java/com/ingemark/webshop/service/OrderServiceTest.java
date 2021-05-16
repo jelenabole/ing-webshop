@@ -1,7 +1,6 @@
 package com.ingemark.webshop.service;
 
 import com.ingemark.webshop.enums.OrderStatus;
-import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
 import com.ingemark.webshop.model.Product;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -103,11 +103,11 @@ class OrderServiceTest {
     void testGetOne_ObjectNotFound() {
         Long objectID = 3L;
         when(orderRepository.findById(objectID))
-                .thenThrow(new ObjectNotFoundException(Order.class.getSimpleName(), objectID));
-        Exception exception = assertThrows(ObjectNotFoundException.class, () -> orderService.getOne(objectID));
+                .thenThrow(new EntityNotFoundException("Order with that id not found"));
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> orderService.getOne(objectID));
 
         verify(orderRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Order with id " + objectID).contains("not found");
+        assertThat(exception.getMessage()).startsWith("Order with that id not found");
     }
 
     @Test
@@ -143,11 +143,11 @@ class OrderServiceTest {
     void testUpdate_ObjectNotFound() {
         Long objectID = 3L;
         when(orderRepository.findById(anyLong()))
-                .thenThrow(new ObjectNotFoundException(Order.class.getSimpleName(), objectID));
-        Exception exception = assertThrows(ObjectNotFoundException.class, () -> orderService.update(testWithoutItems));
+                .thenThrow(new EntityNotFoundException("Order with that id not found"));
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> orderService.update(testWithoutItems));
 
         verify(orderRepository, times(1)).findById(anyLong());
-        assertThat(exception.getMessage()).startsWith("Order with id " + objectID).contains("not found");
+        assertThat(exception.getMessage()).startsWith("Order with that id not found");
     }
 
     @Test

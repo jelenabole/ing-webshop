@@ -1,11 +1,11 @@
 package com.ingemark.webshop.service;
 
-import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.model.Customer;
 import com.ingemark.webshop.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,11 +21,10 @@ public class CustomerService {
 
     public Customer getOne(Long id) {
         return customerRepository.findById(id)
-                .orElseThrow(() -> new ObjectNotFoundException(Customer.class.getSimpleName(), id));
+                .orElseThrow(() -> new EntityNotFoundException("Customer with that id not found"));
     }
 
     public Customer getTestUser() {
-        Customer customer;
         List<Customer> list = new ArrayList<>();
         getAll().iterator().forEachRemaining(list::add);
 

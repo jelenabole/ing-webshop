@@ -27,8 +27,7 @@ public class ValidationExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, Object> handleValidationError(MethodArgumentNotValidException ex) {
-        Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.BAD_REQUEST.value());
+        Map<String, Object> body = createExceptionBody(ex, HttpStatus.BAD_REQUEST);
 
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach((error) -> {
@@ -45,62 +44,39 @@ public class ValidationExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ HttpMessageNotReadableException.class, ArgumentNotValidException.class })
     public Map<String, Object> handleWrongArguments(RuntimeException ex) {
-        Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        return body;
+        return createExceptionBody(ex, HttpStatus.BAD_REQUEST);
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Map<String, Object> handleDataIntegrityError(DataIntegrityViolationException ex) {
-        Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.CONFLICT.value());
-        return body;
+        return createExceptionBody(ex, HttpStatus.CONFLICT);
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(ObjectNotFoundException.class)
-    public Object handleObjectNotFoundException(ObjectNotFoundException ex) {
-        Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        return body;
-    }
-
-    @ResponseBody
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(EntityNotFoundException.class)
-    public Object handleObjectNotFoundException(EntityNotFoundException ex) {
-        Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        return body;
-    }
-
-    @ResponseBody
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler(EmptyResultDataAccessException.class)
-    public Object handleObjectNotFoundException(EmptyResultDataAccessException ex) {
-        Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        return body;
+    @ExceptionHandler({ EntityNotFoundException.class, EmptyResultDataAccessException.class }) // get, delete
+    public Object handleObjectNotFoundException(RuntimeException ex) {
+        return createExceptionBody(ex, HttpStatus.NOT_FOUND);
     }
 
     @ResponseBody
     @ResponseStatus(HttpStatus.FAILED_DEPENDENCY)
     @ExceptionHandler(WebClientResponseException.class)
     public Object handleObjectNotFoundException(WebClientResponseException ex) {
-        Map<String, Object> body = createExceptionBody(ex);
-        body.put("status", HttpStatus.FAILED_DEPENDENCY.value());
+        Map<String, Object> body = createExceptionBody(ex, HttpStatus.FAILED_DEPENDENCY);
         body.put("additionalMessage", "HNB API error");
         return body;
     }
 
-    private Map<String, Object> createExceptionBody(Exception ex) {
+    private Map<String, Object> createExceptionBody(Exception ex, HttpStatus status) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("message", ex.getMessage());
         body.put("error", ex.getClass().getSimpleName());
+        body.put("status", status.value());
+
         return body;
     }
 

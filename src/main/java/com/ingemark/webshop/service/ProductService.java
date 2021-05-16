@@ -1,12 +1,12 @@
 package com.ingemark.webshop.service;
 
-import com.ingemark.webshop.exception.ObjectNotFoundException;
 import com.ingemark.webshop.model.Product;
 import com.ingemark.webshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class ProductService {
 
     public Product getOne(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new ObjectNotFoundException(Product.class.getSimpleName(), id));
+                .orElseThrow(() -> new EntityNotFoundException("Product with that id not found"));
     }
 
     public Product save(Product product) {
@@ -40,7 +40,7 @@ public class ProductService {
     @Transactional
     public Product update(Long id, Product product) {
         Product newInfo = productRepository.findById(id)
-                .orElseThrow(() -> new ObjectNotFoundException(Product.class.getSimpleName(), id));
+                .orElseThrow(() -> new EntityNotFoundException("Product with that id not found"));
 
         // code change ignored
         newInfo.setName(product.getName());
