@@ -80,7 +80,7 @@ public class OrderService {
 
         Order currentState = orderRepository.findById(order.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Order with provided id not found"));
-        if (order.getStatus() == OrderStatus.SUBMITTED) throw new ArgumentNotValidException("Object already finalized");
+        if (currentState.getStatus() == OrderStatus.SUBMITTED) throw new ArgumentNotValidException("Object already finalized");
         Set<OrderItem> fromRequest = order.getOrderItems();
 
         // 1 - remove items that are 0
@@ -138,7 +138,8 @@ public class OrderService {
 
         // calculate prices
         calculateTotalPrice(order);
-        BigDecimal totalPriceInEur = euroRate.getMiddleRate().multiply(order.getTotalPriceHrk());
+        BigDecimal totalPriceInEur = order.getTotalPriceHrk()
+                .divide(euroRate.getMiddleRate(), 2, RoundingMode.HALF_UP);
         order.setTotalPriceEur(totalPriceInEur.setScale(2, RoundingMode.HALF_UP));
 
         order.setStatus(OrderStatus.SUBMITTED);

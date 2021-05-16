@@ -15,7 +15,7 @@ import java.util.Set;
 @Getter @Setter @NoArgsConstructor
 public class Order extends BaseEntity {
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Customer customer;
 
     @Column(nullable = false)
