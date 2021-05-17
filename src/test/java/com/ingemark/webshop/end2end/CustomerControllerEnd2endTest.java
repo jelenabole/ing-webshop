@@ -1,4 +1,4 @@
-package com.ingemark.webshop.integration;
+package com.ingemark.webshop.end2end;
 
 import com.ingemark.webshop.model.Customer;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 @TestPropertySource("/application-integration-test.properties")
-public class CustomerControllerIntegrationTest {
+public class CustomerControllerEnd2endTest {
 
     @Autowired
     private WebTestClient webClient;

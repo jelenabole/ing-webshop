@@ -21,18 +21,19 @@ public class HNBService {
     private static final Logger logger = LoggerFactory.getLogger(HNBService.class);
 
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(3);
-    private final WebClient HNBApiClient;
+    private final WebClient hnbApiClient;
 
     /**
      * Fetches the exchange data for different currencies from HNB api.
      *
-     * @param currency HNBCurrency enum value that represent the currency's url params
+     * @param forCurrency HNBCurrency name (enum) that represent the currency's url params
      * @return Exchange Data object with the values for a given currency
      */
-    ExchangeRateData getExchangeRate(HNBCurrency currency) {
-        logger.info("getExchangeRate is called - for currency: " + currency.name());
-        List<ExchangeRateData> exchangeRates = HNBApiClient.get()
-                .uri(currency.getUrl())
+    public ExchangeRateData getExchangeRate(HNBCurrency forCurrency) {
+        // TODO - method get-one-exchange-data
+        logger.info("getExchangeRate is called - for currency: {}", forCurrency.name());
+        List<ExchangeRateData> exchangeRates = hnbApiClient
+                .get().uri(forCurrency.getUrl())
                 .retrieve()
                 .onStatus(HttpStatus::isError, ClientResponse::createException)
                 .bodyToFlux(ExchangeRateData.class)
@@ -41,6 +42,7 @@ public class HNBService {
         if (exchangeRates == null || exchangeRates.isEmpty())
             throw new WebClientResponseException(1, "HNB API error- value empty", null, null, null);
 
+        logger.info("getExchangeRate is called - retrieved rate: {}", exchangeRates.get(0).getMiddleRate());
         return exchangeRates.get(0);
     }
 
