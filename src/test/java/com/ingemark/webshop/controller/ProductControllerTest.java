@@ -207,10 +207,22 @@ public class ProductControllerTest {
     }
 
     @Test
+    @DisplayName("Should delete product with a given id")
     public void deleteProduct() throws Exception {
         this.mockMvc
                 .perform(delete(productUrl + "/1"))
                 .andExpect(status().isNoContent());
+
+        verify(productService, times(1)).delete(forClass(Long.class).capture());
+    }
+
+    @Test
+    @DisplayName("Should return NotFound when given the id that doesn't exist")
+    public void deleteProductFail_IfDoesntExist() throws Exception {
+        doThrow(new EntityNotFoundException()).when(productService).delete(anyLong());
+        this.mockMvc
+                .perform(delete(productUrl + "/10"))
+                .andExpect(status().isNotFound());
 
         verify(productService, times(1)).delete(forClass(Long.class).capture());
     }

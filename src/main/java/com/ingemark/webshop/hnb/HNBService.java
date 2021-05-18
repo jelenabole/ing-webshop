@@ -1,4 +1,4 @@
-package com.ingemark.webshop.service;
+package com.ingemark.webshop.hnb;
 
 import com.ingemark.webshop.hnb.model.ExchangeRateData;
 import com.ingemark.webshop.hnb.enums.HNBCurrency;
@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 
@@ -26,14 +27,13 @@ public class HNBService {
     /**
      * Fetches the exchange data for different currencies from HNB api.
      *
-     * @param forCurrency HNBCurrency name (enum) that represent the currency's url params
+     * @param urlParams HBN api specific params, can be represented with HNBCurrency enum
      * @return Exchange Data object with the values for a given currency
      */
-    public ExchangeRateData getExchangeRate(HNBCurrency forCurrency) {
-        // TODO - method get-one-exchange-data
-        logger.info("getExchangeRate is called - for currency: {}", forCurrency.name());
+    public ExchangeRateData getExchangeRate(String urlParams) {
+        logger.info("getExchangeRate is called - url params: {}", urlParams);
         List<ExchangeRateData> exchangeRates = hnbApiClient
-                .get().uri(forCurrency.getUrl())
+                .get().uri(urlParams)
                 .retrieve()
                 .onStatus(HttpStatus::isError, ClientResponse::createException)
                 .bodyToFlux(ExchangeRateData.class)
@@ -44,6 +44,19 @@ public class HNBService {
 
         logger.info("getExchangeRate is called - retrieved rate: {}", exchangeRates.get(0).getMiddleRate());
         return exchangeRates.get(0);
+    }
+
+    /**
+     * Fetches only middle rate from exchange data for specific currencies from HNB api.
+     *
+     * @param forCurrency HNBCurrency name (enum) that represent the currency's url params
+     * @return BigDecimal value of middle exchange rate
+     */
+    public BigDecimal getMiddleExchangeRate(HNBCurrency forCurrency) {
+        logger.info("getMiddleExchangeRate is called - for currency: {}", forCurrency.name());
+        ExchangeRateData data = getExchangeRate(forCurrency.getUrlPath());
+
+        return data.getMiddleRate();
     }
 
 }

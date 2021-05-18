@@ -5,6 +5,7 @@ import com.ingemark.webshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -102,7 +103,11 @@ public class ProductService {
      */
     public void delete(Long id) {
         logger.info("delete is called - with id: {}", id);
-        productRepository.deleteById(id);
+        try {
+            productRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException ex) {
+            throw new EntityNotFoundException("Product with provided id not found");
+        }
     }
 
 }

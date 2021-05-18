@@ -5,7 +5,6 @@ import javax.persistence.*;
 
 @MappedSuperclass
 @Getter
-@Inheritance(strategy=InheritanceType.TABLE_PER_CLASS)
 public abstract class BaseEntity {
     
     @Id

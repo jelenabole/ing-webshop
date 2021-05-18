@@ -2,6 +2,7 @@ package com.ingemark.webshop.end2end;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.ingemark.webshop.form.OrderForm;
 import com.ingemark.webshop.model.enums.OrderStatus;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
@@ -16,7 +17,6 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Set;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,8 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
-@TestPropertySource("/application-integration-test.properties")
-@ActiveProfiles("test")
+@ActiveProfiles({ "test", "integration-test" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OrderControllerEnd2endTest {
 
@@ -82,7 +82,7 @@ public class OrderControllerEnd2endTest {
     @Test
     @DisplayName("should get order from the database")
     public void getOneObject() {
-        Order result = webClient.get().uri("/api/read-orders/1")
+        Order result = webClient.get().uri("/api/read-order/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -99,7 +99,7 @@ public class OrderControllerEnd2endTest {
     @Test
     @DisplayName("should return NotFound when getting uknown object")
     public void getOneObject_404() {
-        webClient.get().uri("/api/read-orders/10")
+        webClient.get().uri("/api/read-order/10")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound()
@@ -125,16 +125,69 @@ public class OrderControllerEnd2endTest {
     }
 
     @Test
+    @DisplayName("should create new order with list of items")
+    public void createNewObject_WithItems() {
+        OrderForm orderForm = OrderForm.builder().orderItems(Set.of(
+                OrderItem.builder().quantity(1)
+                        .product(productService.getOne(1L)).build())
+        ).build();
+
+        Order result = webClient.post().uri("/api/create-order")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(orderForm), OrderForm.class)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Order.class).returnResult().getResponseBody();
+
+        assertThat(result).isNotNull();
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.DRAFT);
+        assertThat(result.getTotalPriceHrk()).isEqualTo(BigDecimal.ZERO);
+        assertThat(result.getTotalPriceEur()).isEqualTo(BigDecimal.ZERO);
+        assertThat(result.getOrderItems()).isNotNull();
+        assertThat(result.getOrderItems()).hasSize(1);
+        assertThat(result.getCustomer().getId()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("should create new order with default values even if extra properties were sent")
+    public void createNewObject_IgnoreExtraProperties() {
+        OrderItem item1 = OrderItem.builder().product(productService.getOne(1L)).quantity(2).build();
+        Order newObject = Order.builder().id(3L).status(OrderStatus.SUBMITTED)
+                .totalPriceHrk(BigDecimal.TEN).totalPriceEur(BigDecimal.TEN)
+                .orderItems(Sets.newHashSet(Collections.singletonList(item1))).build();
+
+        Order result = webClient.post().uri("/api/create-order")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(newObject), Order.class)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Order.class).returnResult().getResponseBody();
+
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isNotNull().isGreaterThan(3);
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.DRAFT);
+        assertThat(result.getTotalPriceHrk()).isEqualTo(BigDecimal.ZERO);
+        assertThat(result.getTotalPriceEur()).isEqualTo(BigDecimal.ZERO);
+        assertThat(result.getOrderItems()).isNotNull();
+        assertThat(result.getOrderItems()).hasSize(1);
+        assertThat(result.getCustomer().getId()).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("should update existing order - add only available items")
     public void updateObject_AddItems() {
+        // items for tests, by order: 0 quantity, keep but change quantity, unavailable, removed
         OrderItem item1 = OrderItem.builder().product(productService.getOne(1L)).quantity(2).build();
         OrderItem item2 = OrderItem.builder().product(productService.getOne(2L)).quantity(5).build();
         OrderItem item3 = OrderItem.builder().product(productService.getOne(3L)).quantity(5).build();
+        OrderItem item4 = OrderItem.builder().product(productService.getOne(4L)).quantity(3).build();
         Order newObject = Order.builder().id(3L)
-                .orderItems(Sets.newHashSet(Arrays.asList(item1, item2, item3))).build();
+                .orderItems(Sets.newHashSet(Arrays.asList(item1, item2, item3, item4))).build();
 
         // 1 - add only available items (remove item3)
-        Order result = webClient.put().uri("/api/update-order")
+        Order result = webClient.put().uri("/api/update-order/" + newObject.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(newObject), Order.class)
@@ -145,19 +198,20 @@ public class OrderControllerEnd2endTest {
         assertThat(result).isNotNull();
         assertThat(result.getTotalPriceHrk()).isEqualTo(zeroDecimal);
         assertThat(result.getTotalPriceEur()).isEqualTo(zeroDecimal);
-        assertThat(result.getOrderItems()).isNotNull().hasSize(2);
+        assertThat(result.getOrderItems()).isNotNull().hasSize(3);
 
-        // 2 - test quantity change and removing 0 qunatity items (remove item1)
+        // 2 - test quantity change, auto-removing 0 quantity items and removing one item by user (remove item1, item4)
         result.getOrderItems().remove(item1);
         result.getOrderItems().remove(item2);
-        item2.setQuantity(1);
+        result.getOrderItems().remove(item4);
         item1.setQuantity(0);
+        item2.setQuantity(1);
         result.getOrderItems().addAll(Lists.newArrayList(item1, item2));
 
-        Order result2 = webClient.put().uri("/api/update-order")
+        Order result2 = webClient.put().uri("/api/update-order/" + result.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Mono.just(newObject), Order.class)
+                .body(Mono.just(result), Order.class)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Order.class).returnResult().getResponseBody();
@@ -166,7 +220,29 @@ public class OrderControllerEnd2endTest {
         assertThat(result2.getTotalPriceHrk()).isEqualTo(zeroDecimal);
         assertThat(result2.getTotalPriceEur()).isEqualTo(zeroDecimal);
         assertThat(result2.getOrderItems()).isNotNull().hasSize(1);
-        System.out.println(result2);
+        assertThat(result2.getOrderItems().stream().findFirst().get().getQuantity()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("should update existing order - by id from the path, not the object")
+    public void updateObject_ByIdTest() {
+        OrderItem item1 = OrderItem.builder().product(productService.getOne(1L)).quantity(2).build();
+        Order newObject = Order.builder().id(10L).orderItems(Sets.newHashSet(Collections.singletonList(item1))).build();
+
+        Order result = webClient.put().uri("/api/update-order/" + 3)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Mono.just(newObject), Order.class)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Order.class).returnResult().getResponseBody();
+
+        assertThat(result).isNotNull();
+        // id should be taken from path, not object:
+        assertThat(result.getId()).isEqualTo(3);
+        assertThat(result.getTotalPriceHrk()).isEqualTo(zeroDecimal);
+        assertThat(result.getTotalPriceEur()).isEqualTo(zeroDecimal);
+        assertThat(result.getOrderItems()).isNotNull().hasSize(1);
     }
 
     @Test
@@ -175,7 +251,7 @@ public class OrderControllerEnd2endTest {
         OrderItem item1 = OrderItem.builder().product(productService.getOne(1L)).quantity(-2).build();
         Order newObject = Order.builder().id(2L).orderItems(Sets.newHashSet(Collections.singletonList(item1))).build();
 
-        webClient.put().uri("/api/update-order")
+        webClient.put().uri("/api/update-order/" + newObject.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(newObject), Order.class)
@@ -192,7 +268,7 @@ public class OrderControllerEnd2endTest {
         OrderItem item1 = OrderItem.builder().product(productService.getOne(1L)).quantity(2).build();
         Order newObject = Order.builder().id(2L).orderItems(Sets.newHashSet(Collections.singletonList(item1))).build();
 
-        webClient.put().uri("/api/update-order")
+        webClient.put().uri("/api/update-order/" + newObject.getId())
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(newObject), Order.class)
@@ -207,7 +283,7 @@ public class OrderControllerEnd2endTest {
     public void updateObject_404() {
         Order newObject = Order.builder().id(10L).build();
 
-        webClient.put().uri("/api/update-order")
+        webClient.put().uri("/api/update-order/" + 10)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(newObject), Order.class)
@@ -233,7 +309,7 @@ public class OrderControllerEnd2endTest {
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody()
-                .jsonPath("$.message").value(Matchers.containsString("entity with id 10 exists"));
+                .jsonPath("$.message").value(Matchers.containsString("Order with provided id not found"));
     }
 
     @Test
@@ -281,6 +357,5 @@ public class OrderControllerEnd2endTest {
                 .setScale(2, RoundingMode.HALF_UP));
         assertThat(result.getOrderItems()).isNotNull().hasSize(2);
         assertThat(result.getStatus()).isEqualTo(OrderStatus.SUBMITTED);
-        System.out.println(result);
     }
 }

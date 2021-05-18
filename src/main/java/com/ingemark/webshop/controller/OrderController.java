@@ -1,10 +1,12 @@
 package com.ingemark.webshop.controller;
 
+import com.ingemark.webshop.form.OrderForm;
 import com.ingemark.webshop.model.Customer;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.service.CustomerService;
 import com.ingemark.webshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ public class OrderController {
 
     private final OrderService orderService;
     private final CustomerService customerService;
+    private final ModelMapper modelMapper;
 
     @GetMapping("/read-orders")
     public List<Order> getAllOrders() {
@@ -29,7 +32,7 @@ public class OrderController {
         return orderService.getAll();
     }
 
-    @GetMapping("/read-orders/{id}")
+    @GetMapping("/read-order/{id}")
     public Order getOrder(@PathVariable Long id) {
         logger.info("getOrder is called - with id: {}", id);
         return orderService.getOne(id);
@@ -37,21 +40,23 @@ public class OrderController {
 
     @PostMapping("/create-order")
     @ResponseStatus(HttpStatus.CREATED)
-    public Order createOrder(@Valid @RequestBody(required = false) Order order) {
-        logger.info("createOrder is called - with args: {}", (order != null ? order.toString() : null));
+    public Order createOrder(@Valid @RequestBody(required = false) OrderForm orderForm) {
+        logger.info("createOrder is called - with args: {}", (orderForm));
+        Order order = (orderForm == null ? new Order() : modelMapper.map(orderForm, Order.class));
 
-        // omit getting a customer
+        // omit getting a customer from token
         Customer customer = customerService.getTestCustomer();
-        if (order == null) order = new Order();
-
         order.setCustomer(customer);
+
         return orderService.save(order);
     }
 
-    @PutMapping("/update-order")
-    public Order updateOrder(@Valid @RequestBody Order order) {
-        logger.info("updateOrder is called - with args: {}", order.toString());
-        return orderService.update(order);
+    @PutMapping("/update-order/{id}")
+    public Order updateOrder(@PathVariable Long id, @Valid @RequestBody OrderForm orderForm) {
+        logger.info("updateOrder is called - with id: {}, and args: {}", id, orderForm);
+        Order order = modelMapper.map(orderForm, Order.class);
+
+        return orderService.update(id, order);
     }
 
     @DeleteMapping("/delete-order/{id}")

@@ -1,9 +1,9 @@
 package com.ingemark.webshop.service;
 
+import com.ingemark.webshop.hnb.HNBService;
 import com.ingemark.webshop.hnb.enums.HNBCurrency;
 import com.ingemark.webshop.model.enums.OrderStatus;
 import com.ingemark.webshop.exception.ArgumentNotValidException;
-import com.ingemark.webshop.hnb.model.ExchangeRateData;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
 import com.ingemark.webshop.model.Product;
@@ -11,6 +11,7 @@ import com.ingemark.webshop.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,11 +75,9 @@ public class OrderService {
      * @throws RuntimeException thrown if order doesn't exist, doesn't have ID, or is already finalized
      */
     @Transactional
-    public Order update(Order order) {
-        logger.info("update is called - with args: {}", order);
-        if (order.getId() == null) throw new ArgumentNotValidException("Object has no id");
-
-        Order currentState = orderRepository.findById(order.getId())
+    public Order update(Long id, Order order) {
+        logger.info("update is called - with id: {}, and args: {}", id, order);
+        Order currentState = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order with provided id not found"));
         if (currentState.getStatus() == OrderStatus.SUBMITTED) throw new ArgumentNotValidException("Object already finalized");
         Set<OrderItem> fromRequest = order.getOrderItems();
@@ -113,7 +112,11 @@ public class OrderService {
      */
     public void delete(Long id) {
         logger.info("delete is called - with id: {}", id);
-        orderRepository.deleteById(id);
+        try {
+            orderRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException ex) {
+            throw new EntityNotFoundException("Order with provided id not found");
+        }
     }
 
     /**
@@ -134,12 +137,12 @@ public class OrderService {
         if (order.getOrderItems().isEmpty())
             throw new ArgumentNotValidException("Order doesn't have any items");
 
-        ExchangeRateData euroRate = hnbService.getExchangeRate(HNBCurrency.EUR);
+        BigDecimal euroMiddleRate = hnbService.getMiddleExchangeRate(HNBCurrency.EUR);
 
         // calculate prices
         calculateTotalPrice(order);
         BigDecimal totalPriceInEur = order.getTotalPriceHrk()
-                .divide(euroRate.getMiddleRate(), 2, RoundingMode.HALF_UP);
+                .divide(euroMiddleRate, 2, RoundingMode.HALF_UP);
         order.setTotalPriceEur(totalPriceInEur.setScale(2, RoundingMode.HALF_UP));
 
         order.setStatus(OrderStatus.SUBMITTED);

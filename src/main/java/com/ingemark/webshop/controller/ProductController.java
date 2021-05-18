@@ -34,13 +34,13 @@ public class ProductController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Product createProduct(@Valid @RequestBody Product product) {
-        logger.info("createProduct is called - with args: {}", product.toString());
+        logger.info("createProduct is called - with args: {}", product);
         return productService.save(product);
     }
 
     @PutMapping("/{id}")
     public Product updateProduct(@PathVariable Long id, @Valid @RequestBody Product product) {
-        logger.info("updateProduct is called - with id: {}, and args: {}", id, product.toString());
+        logger.info("updateProduct is called - with id: {}, and args: {}", id, product);
         return productService.update(id, product);
     }
 

@@ -6,10 +6,10 @@ import com.ingemark.webshop.controller.ProductController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@TestPropertySource("/application-integration-test.properties")
+@ActiveProfiles("test")
 class WebshopApplicationTest {
 
 	@Autowired

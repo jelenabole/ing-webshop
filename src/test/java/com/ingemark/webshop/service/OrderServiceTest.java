@@ -1,5 +1,6 @@
 package com.ingemark.webshop.service;
 
+import com.ingemark.webshop.hnb.HNBService;
 import com.ingemark.webshop.model.enums.OrderStatus;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
@@ -30,8 +31,6 @@ import static org.mockito.Mockito.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderServiceTest {
     private OrderService orderService;
-    private ProductService productService;
-    private HNBService hnbService;
     private OrderRepository orderRepository;
 
     private static Order testWithoutItems;
@@ -58,8 +57,8 @@ class OrderServiceTest {
     @BeforeEach
     void setupService() {
         orderRepository = mock(OrderRepository.class);
-        productService = mock(ProductService.class);
-        hnbService = mock(HNBService.class);
+        ProductService productService = mock(ProductService.class);
+        HNBService hnbService = mock(HNBService.class);
         orderService = new OrderService(orderRepository, productService, hnbService);
     }
 
@@ -131,7 +130,7 @@ class OrderServiceTest {
         when(orderRepository.findById(objectID)).thenReturn(Optional.of(testWithoutItems));
         when(orderRepository.save(any(Order.class))).thenReturn(update);
 
-        Order result = orderService.update(update);
+        Order result = orderService.update(update.getId(), update);
         verify(orderRepository, times(1)).findById(anyLong());
         verify(orderRepository, times(1)).save(any(Order.class));
 
@@ -144,7 +143,8 @@ class OrderServiceTest {
         Long objectID = 3L;
         when(orderRepository.findById(anyLong()))
                 .thenThrow(new EntityNotFoundException("Order with provided id not found"));
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> orderService.update(testWithoutItems));
+        Exception exception = assertThrows(EntityNotFoundException.class, () ->
+                orderService.update(testWithoutItems.getId(), testWithoutItems));
 
         verify(orderRepository, times(1)).findById(anyLong());
         assertThat(exception.getMessage()).startsWith("Order with provided id not found");

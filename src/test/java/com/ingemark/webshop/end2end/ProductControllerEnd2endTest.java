@@ -10,7 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
-@TestPropertySource("/application-integration-test.properties")
+@ActiveProfiles({ "test", "integration-test" })
 public class ProductControllerEnd2endTest {
 
     @Autowired
@@ -72,7 +72,7 @@ public class ProductControllerEnd2endTest {
     @Test
     @DisplayName("should create new product")
     public void createNewObject() {
-        Product newProduct = Product.builder().code("0000000004").name("Product 4")
+        Product newProduct = Product.builder().code("0000000005").name("Product 5")
                 .priceHrk(BigDecimal.TEN).isAvailable(false).build();
 
         Product result = webClient.post().uri(productUrl)
@@ -84,8 +84,8 @@ public class ProductControllerEnd2endTest {
                 .expectBody(Product.class).returnResult().getResponseBody();
 
         assertThat(result).isNotNull();
-        assertThat(result.getCode()).isEqualTo("0000000004");
-        assertThat(result.getName()).isEqualTo("Product 4");
+        assertThat(result.getCode()).isEqualTo("0000000005");
+        assertThat(result.getName()).isEqualTo("Product 5");
         assertThat(result.getPriceHrk()).isEqualTo(BigDecimal.TEN);
         assertThat(result.isAvailable()).isFalse();
     }
