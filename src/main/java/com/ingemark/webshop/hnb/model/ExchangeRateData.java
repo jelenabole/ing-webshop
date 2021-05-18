@@ -1,9 +1,9 @@
-package com.ingemark.webshop.domain;
+package com.ingemark.webshop.hnb.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.ingemark.webshop.helper.HNBDecimalDeserializer;
+import com.ingemark.webshop.hnb.helper.HNBDecimalDeserializer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

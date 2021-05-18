@@ -1,7 +1,7 @@
 package com.ingemark.webshop.service;
 
-import com.ingemark.webshop.domain.ExchangeRateData;
-import com.ingemark.webshop.enums.HNBCurrency;
+import com.ingemark.webshop.hnb.model.ExchangeRateData;
+import com.ingemark.webshop.hnb.enums.HNBCurrency;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,7 +1,7 @@
 package com.ingemark.webshop.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.model.enums.OrderStatus;
 import com.ingemark.webshop.exception.ArgumentNotValidException;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;

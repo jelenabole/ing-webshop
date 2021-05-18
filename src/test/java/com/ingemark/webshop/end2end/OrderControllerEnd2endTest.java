@@ -2,7 +2,7 @@ package com.ingemark.webshop.end2end;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.model.enums.OrderStatus;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
 import com.ingemark.webshop.service.ProductService;

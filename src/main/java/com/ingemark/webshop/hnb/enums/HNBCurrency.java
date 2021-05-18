@@ -1,4 +1,4 @@
-package com.ingemark.webshop.enums;
+package com.ingemark.webshop.hnb.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

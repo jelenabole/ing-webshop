@@ -1,6 +1,6 @@
 package com.ingemark.webshop.service;
 
-import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.model.enums.OrderStatus;
 import com.ingemark.webshop.model.Order;
 import com.ingemark.webshop.model.OrderItem;
 import com.ingemark.webshop.model.Product;

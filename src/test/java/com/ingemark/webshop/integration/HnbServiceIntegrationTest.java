@@ -1,7 +1,7 @@
 package com.ingemark.webshop.integration;
 
-import com.ingemark.webshop.domain.ExchangeRateData;
-import com.ingemark.webshop.enums.HNBCurrency;
+import com.ingemark.webshop.hnb.model.ExchangeRateData;
+import com.ingemark.webshop.hnb.enums.HNBCurrency;
 import com.ingemark.webshop.service.HNBService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;

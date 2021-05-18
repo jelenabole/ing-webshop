@@ -1,4 +1,4 @@
-package com.ingemark.webshop.helper;
+package com.ingemark.webshop.hnb.helper;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

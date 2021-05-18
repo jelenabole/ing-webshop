@@ -1,6 +1,6 @@
 package com.ingemark.webshop.model;
 
-import com.ingemark.webshop.enums.OrderStatus;
+import com.ingemark.webshop.model.enums.OrderStatus;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
