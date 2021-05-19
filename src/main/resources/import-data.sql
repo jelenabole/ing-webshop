@@ -5,6 +5,8 @@ INSERT INTO customer(email, first_name, last_name) VALUES ('john@email.com', 'Jo
 INSERT INTO product(code, name, description, price_hrk, is_available) VALUES ('0000000001', 'Product for get', 'Product description', 17.25, true);
 INSERT INTO product(code, name, description, price_hrk, is_available) VALUES ('0000000002', 'Product for update', 'Product description', 10,  true);
 INSERT INTO product(code, name, description, price_hrk, is_available) VALUES ('0000000003', 'Product for delete', 'Product not available', 14.99, false);
+INSERT INTO product(code, name, description, price_hrk, is_available) VALUES ('0000000004', 'Product for additional tests', 'Product description', 14.99, true);
+
 
 -- orders - get, fail-update/finalize, update, delete
 INSERT INTO webshop_order(customer_id, status, total_price_hrk, total_price_eur) VALUES (1, 'DRAFT', 0, 0);
