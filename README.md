@@ -49,6 +49,10 @@ Below are instructions for downloading this app and running it locally.
 * End-2-end tests use wiremock to mock external service, here: 
 [`com.ingemark.webshop.end2end.OrderControllerE2ETest`](https://github.com/jelenabole/ing-webshop/blob/main/src/test/java/com/ingemark/webshop/end2end/OrderControllerEnd2endTest.java)
 
+## Running built app
+To start the application, JAR file is available in /lib directory, from which it can be
+started with the command `java -jar  ./webshop-0.0.1-SNAPSHOT.jar`
+
 ## Used in this project
 * [Spring boot](https://spring.io/projects/spring-boot)
 * [Swagger](https://swagger.io/)
